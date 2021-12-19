@@ -1,6 +1,9 @@
 import requests
-import json
-import pandas
+import pandas as pd
+from datetime import date
+from export import export
+from get_table import get_table, get_commented_table
+
 
 teams = {'GSW': 1610612744,
         'PHX':  1610612756,
@@ -34,8 +37,69 @@ teams = {'GSW': 1610612744,
         'DET':  1610612765}
 
 
+def per_game_stats():
+    season = input("\nWhat season?\n")
+    url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_per_game.html"
 
-def teamroster():
+    print("\n" + season + " Per Game Stats:")
+    per_game_stats = get_table(url, "per_game_stats")
+    per_game_stats.head(10)
+    print(per_game_stats)
+
+    return
+
+
+def team_stats():
+    team = input("\nWhich team, bossman?\n")
+    season = input("\nWhat season?\n")
+    url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
+
+    print("\n" + team + " " + season + " TEAM STATS")
+
+    print("\nRoster:")
+    roster = get_table(url, "roster")
+    print(roster)
+
+    print("\nTeam and Opponent Stats:")
+    team_and_opponent = get_commented_table(url, "team_and_opponent")
+    print(team_and_opponent)
+
+    print("\nMisc:")
+    misc = get_commented_table(url, "team_misc")
+    print(misc)
+
+    return
+
+
+def odds():
+    url = "https://cdn.nba.com/static/json/liveData/odds/odds_todaysGames.json"
+    headers = {
+        'authority': 'cdn.nba.com',
+	'sec-ch-ua': '"Opera GX";v="81", " Not;A Brand";v="99", "Chromium";v="95"',
+	'sec-ch-ua-mobile': '?0',
+	'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 OPR/81.0.4196.61',
+ 	'sec-ch-ua-platform': '"Windows"',
+ 	'accept': '*/*',
+	'origin': 'https://www.nba.com',
+ 	'sec-fetch-site': 'same-site',
+ 	'sec-fetch-mode': 'cors',
+ 	'sec-fetch-dest': 'empty',
+ 	'referer': 'https://www.nba.com/',
+ 	'accept-language': 'en-US,en;q=0.9',
+	'if-none-match': '"862f8896ec0a96bec826bc1db1fd7d20"',
+	'if-modified-since': 'Tue, 07 Dec 2021 17:58:42 GMT',
+    }
+
+    response = requests.request("GET", url, headers=headers)
+    oddsdata = response.json()
+    df = pd.json_normalize(oddsdata)
+    print(df)
+    export(df, str(date.today()) + "_odds")
+
+    return
+
+
+def team_roster():
     team = input("\nWhich team, bossman?\n")
     if team in teams:    
         teamID = teams.get(team)
@@ -55,44 +119,12 @@ def teamroster():
         response = requests.request("GET", url, headers=headers, timeout=5)
         teamdata = response.json()
 
-        df = pandas.json_normalize(teamdata['resultSets'])
+        df = pd.json_normalize(teamdata['resultSets'])
         print(df.head())
 
         export(df, team + "_roster")
     else:
         print("Idk who that is...")
-        userInput()
 
-
-
-def export(df, name):
-    yn = input("\nDo you want to save this data?\n")
-    if yn == "yes" or yn == "y" or yn == "Yes" or yn == "Y":
-        df.to_csv(name + '.csv', index = False)
-        print("Data saved to file \"" + name + ".csv\"")
-        userInput()
-    if yn == "no" or yn == "n" or yn == "No" or yn == "N":
-        userInput()
-    else:
-        print("Huh?\n")
-        export(df, name)
-
-
-
-def userInput():
-    command = input("\nHow may I help you, mush?\n")
-    if command == "team roster":
-        teamroster()
-    if command == "help":
-        print("\nCommands:")
-        print("\"team roster\" will return the roster for a team of your choice")
-        userInput()
-    else:
-        print("what? (type \"help\" for a list of commands)")
-        userInput()
-
-
-
-print("\n~~~ Hello, mush. Welcome to the MUSH MASTER 3000 ~~~")
-userInput()
+    return
 
