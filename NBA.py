@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 from datetime import date
 from export import export
-from get_table import get_table, get_commented_table
+from get_table import *
 
 
 teams = {'GSW': 1610612744,
@@ -45,6 +45,7 @@ def per_game_stats():
     per_game_stats = get_table(url, "per_game_stats")
     per_game_stats.head(10)
     print(per_game_stats)
+    export(per_game_stats, str(date.today()) + "_per_game_stats")
 
     return
 
@@ -59,15 +60,24 @@ def team_stats():
     print("\nRoster:")
     roster = get_table(url, "roster")
     print(roster)
+    
+    print("\nInjuries:")
+    injuries = get_commented_table(url, "injuries")
+    print(injuries)
 
-    print("\nTeam and Opponent Stats:")
-    team_and_opponent = get_commented_table(url, "team_and_opponent")
-    print(team_and_opponent)
+    print("\nPer Game:")
+    per_game = get_table(url, "per_game")
+    print(per_game)
 
-    print("\nMisc:")
-    misc = get_commented_table(url, "team_misc")
-    print(misc)
+    print("\nTotals:")
+    totals = get_table(url, "totals")
+    print(per_game)
 
+    print("\nAdvanced:")
+    advanced = get_table(url, "advanced")
+    print(advanced)
+
+    #export(df, str(date.today()) + "_odds")
     return
 
 

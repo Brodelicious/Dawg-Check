@@ -19,19 +19,30 @@ def get_table(url, table_name):
 
     return df
 
+
 def get_commented_table(url, table_name):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    comments = soup.find_all(string = lambda text: isinstance(text, Comment))
+    html = urlopen(url)
+    soup = BeautifulSoup(html, 'html.parser')
+   
+    for comment in soup.find_all(text=lambda text: isinstance(text, Comment)):
+        if comment.find(table_name) > 0:
+            comment_soup = BeautifulSoup(comment, 'html.parser')
+            table = comment_soup.find("table")
+        
+            headers = [th.getText() for th in table.findAll('tr', limit=2)[0].findAll('th')]
 
-    tables = []
-    for each in comments:
-        if 'table' in each:
-            try:
-                print(each + "worked")
-                tables.append(pd.read_html(each)[0])
-            except:
-                print(each + "didn't work")
-                continue
+            rows = table.findAll('tr')[1:]
+            data = []
 
-    return tables
+            for tr in rows:
+                td = tr.find_all(['a', 'td'])
+                row = []
+                for tr in td:
+                    if tr.text not in row:
+                        row.append(tr.text)
+                data.append(row)
+                print(row)
+
+            df = pd.DataFrame(data, columns = headers)
+
+            return df
