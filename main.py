@@ -1,4 +1,6 @@
-from NBA import *
+from services.mlb_service import *
+from services.nba_service import *
+from helpers.export import export
 
 
 print("\n~~~ Hello, mush. Welcome to the MUSH MASTER 3000 ~~~")
@@ -8,22 +10,47 @@ def main():
     running = False
 
     command = input("\nHow may I help you, mush?\n")
-    if command == "team roster" and running == False:
+
+# MLB Commands
+    if command == "mlb standings" and running == False:
         running = True
-        team_roster()
-    if command == "odds" and running == False:
+        mlb_standings()
+        #export(games, str(date.today()) + "_odds")
+    if command == "mlb team stats" and running == False:
         running = True
-        odds()
-    if command == "per game stats" and running == False:
+        mlb_team_stats()
+        #export(games, str(date.today()) + "_odds")
+
+# NBA Commands
+    if command == "nba odds" and running == False:
         running = True
-        per_game_stats()
-    if command == "team stats" and running == False:
+        nba_odds()
+        #export(games, str(date.today()) + "_odds")
+    if command == "nba conference standings" and running == False:
         running = True
-        team_stats()
+        nba_conference_standings()
+        #export(games, str(date.today()) + "_odds")
+    if command == "nba per game stats" and running == False:
+        running = True
+        nba_per_game_stats()
+        #export(games, str(date.today()) + "_odds")
+    if command == "nba team stats" and running == False:
+        running = True
+        nba_team_stats()
+        #export(games, str(date.today()) + "_odds")
+    if command == "nba games" and running == False:
+        running = True
+        games = nba_games()
+        export(games, str(date.today()) + "_games")
+    if command == "nba bets" and running == False:
+        running = True
+        nba_bets()
+
     if command == "help" and running == False:
         print("\nCommands:")
-        print("\"team roster\" will return the roster for a team of your choice")
-        print("\"odds\" will return the odds data for today's games")
+        print("\"nba team stats\" will return the stats for a team of your choice")
+        print("\"nba odds\" will return the odds data for today's games")
+        print("\"nba games\" will show today's NBA games")
     else:
         if running == False:
             print("what? (type \"help\" for a list of commands)")
