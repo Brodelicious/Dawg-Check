@@ -10,66 +10,51 @@ def get_nba_games():
     return get_schedule_table(url, 'schedule has-team-logos align-left')
 
 
-def get_nba_conference_standings():
-    season = input("\nWhat season?\n")
+def get_nba_conference_standings(season, conference):
     url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_standings.html#all_confs_standings_E"
     
     if int(season) > 2015:
-        east_standings = get_table(url, "confs_standings_E")
-        west_standing = get_table(url, "confs_standings_W")
-        print()
-        print(east_standings)
-        print()
-        print(west_standing)
+        # The tables in basketball reference are named confs_standings_E and confs_standings_W
+        # Because of this, we only get the first letter of the input from the user in case they type "Eastern conference" for example
+        standings = get_table(url, "confs_standings_" + conference[0].upper())
+        return standings
     
     else:
         print("This only works for seasons 2016 and onward right now :-/")
+        return ""
 
-    return
 
 
-def get_nba_per_game_stats():
-    season = input("\nWhat season?\n")
+def get_nba_per_game_stats(season):
     url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_per_game.html"
-
-    print("\n" + season + " Per Game Stats:")
     per_game_stats = get_table(url, "per_game_stats")
     per_game_stats.head(10)
-    print(per_game_stats)
-    export(per_game_stats, str(date.today()) + "_per_game_stats")
-
-    return
+    return per_game_stats
 
 
-def get_nba_team_stats():
-    team = input("\nWhich team, bossman?\n")
-    season = input("\nWhat season?\n")
+def get_nba_team_roster(team, season):
     url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
+    return get_table(url, "roster")
 
-    print("\n" + team + " " + season + " TEAM STATS")
 
-    print("\nRoster:")
-    roster = get_table(url, "roster")
-    print(roster)
-    
-    print("\nInjuries:")
-    injuries = get_commented_table(url, "injuries")
-    print(injuries)
+def get_nba_team_injuries(team, season):
+    url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
+    return get_commented_table(url, "injuries")
 
-    print("\nPer Game:")
-    per_game = get_table(url, "per_game")
-    print(per_game)
 
-    print("\nTotals:")
-    totals = get_table(url, "totals")
-    print(totals)
+def get_nba_team_per_game_stats(team, season):
+    url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
+    return get_table(url, "per_game")
 
-    print("\nAdvanced:")
-    advanced = get_table(url, "advanced")
-    print(advanced)
 
-    #export(df, str(date.today()) + "_odds")
-    return
+def get_nba_team_totals(team, season):
+    url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
+    return get_table(url, "totals")
+
+
+def get_nba_team_advanced_stats(team, season):
+    url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
+    return get_table(url, "advanced")
 
 
 def get_nba_odds():
@@ -94,7 +79,5 @@ def get_nba_odds():
     response = requests.request("GET", url, headers=headers)
     oddsdata = response.json()
     df = pd.json_normalize(oddsdata)
-    print(df)
-    export(df, str(date.today()) + "_odds")
 
-    return
+    return df
