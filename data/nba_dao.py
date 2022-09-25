@@ -5,12 +5,12 @@ from helpers.web_scraper import *
 from helpers.export import export
 
 
-def get_nba_games():
+def get_games():
     url = 'https://www.espn.com/nba/schedule'
     return get_schedule_table(url, 'schedule has-team-logos align-left')
 
 
-def get_nba_conference_standings(season, conference):
+def get_conference_standings(season, conference):
     url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_standings.html#all_confs_standings_E"
     
     if int(season) > 2015:
@@ -24,40 +24,39 @@ def get_nba_conference_standings(season, conference):
         return ""
 
 
-
-def get_nba_per_game_stats(season):
+def get_per_game_stats(season):
     url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_per_game.html"
     per_game_stats = get_table(url, "per_game_stats")
     per_game_stats.head(10)
     return per_game_stats
 
 
-def get_nba_team_roster(team, season):
+def get_team_roster(team, season):
     url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
     return get_table(url, "roster")
 
 
-def get_nba_team_injuries(team, season):
+def get_team_injuries(team, season):
     url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
     return get_commented_table(url, "injuries")
 
 
-def get_nba_team_per_game_stats(team, season):
+def get_team_per_game_stats(team, season):
     url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
     return get_table(url, "per_game")
 
 
-def get_nba_team_totals(team, season):
+def get_team_totals(team, season):
     url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
     return get_table(url, "totals")
 
 
-def get_nba_team_advanced_stats(team, season):
+def get_team_advanced_stats(team, season):
     url = "https://www.basketball-reference.com/teams/" + team + "/" + season + ".html"
     return get_table(url, "advanced")
 
 
-def get_nba_odds():
+def get_odds():
     url = "https://cdn.nba.com/static/json/liveData/odds/odds_todaysGames.json"
     headers = {
         'authority': 'cdn.nba.com',
@@ -81,3 +80,16 @@ def get_nba_odds():
     df = pd.json_normalize(oddsdata)
 
     return df
+
+
+def get_season_summary_per_game_stats(season):
+    url = 'https://www.basketball-reference.com/leagues/NBA_' + season + '.html'
+    return get_table(url, 'per_game-team')
+
+
+def get_monthly_results(season, month):
+    url = 'https://www.basketball-reference.com/leagues/NBA_' + season + '_games-' + month + '.html'
+    monthly_results = get_table(url, 'schedule')
+    return monthly_results.rename(columns={"Home/Neutral": "Home", "Visitor/Neutral": "Away"})
+
+

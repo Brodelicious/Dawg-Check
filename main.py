@@ -22,22 +22,21 @@ def main():
         #export(games, str(date.today()) + "_odds")
 
 # NBA Commands
+    if command == "nba predict" and running == False:
+        running = True
+        nba_predict()
     if command == "nba odds" and running == False:
         running = True
         nba_odds()
-        #export(games, str(date.today()) + "_odds")
     if command == "nba conference standings" and running == False:
         running = True
         nba_conference_standings()
-        #export(games, str(date.today()) + "_odds")
     if command == "nba per game stats" and running == False:
         running = True
         nba_per_game_stats()
-        #export(games, str(date.today()) + "_odds")
     if command == "nba team stats" and running == False:
         running = True
         nba_team_stats()
-        #export(games, str(date.today()) + "_odds")
     if command == "nba games" and running == False:
         running = True
         games = nba_games()
@@ -45,6 +44,9 @@ def main():
     if command == "nba bets" and running == False:
         running = True
         nba_bets()
+    if command == "nba monthly results" and running == False:
+        running = True
+        nba_get_monthly_results()
 
     if command == "help" and running == False:
         print("\nCommands:")

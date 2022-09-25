@@ -5,6 +5,10 @@ from urllib.request import urlopen
 
 
 def get_table(url, table_name):
+    #pd.options.display.max_columns = None
+    pd.options.display.max_rows = None
+    pd.options.display.width = None
+
     html = urlopen(url)
     soup = BeautifulSoup(html, features="html.parser")
 
@@ -26,6 +30,10 @@ def get_table(url, table_name):
 
 
 def get_div(url, div_name):
+    #pd.options.display.max_columns = None
+    pd.options.display.max_rows = None
+    pd.options.display.width = None
+
     html = urlopen(url)
     soup = BeautifulSoup(html, features="html.parser")
 
