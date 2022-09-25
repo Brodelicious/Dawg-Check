@@ -17,11 +17,12 @@ from collections import defaultdict
 # Much of this code was based off of or taken from this presentation:
 # https://www.youtube.com/watch?v=k7hSD_-gWMw&t=312s
 def nba_predict():
-    season = input("\nWhat season?\n")
+    # This is our scoring mechanism. f1_score uses both wins and loses
+    scorer = make_scorer(f1_score, pos_label=None, average='weighted')
 
     # Get the season results
+    season = input("\nWhat season?\n")
     results = get_monthly_results(season, "october")
-    '''
     results = results.append(get_monthly_results(season, "november"))
     results = results.append(get_monthly_results(season, "december"))
     results = results.append(get_monthly_results(season, "january"))
@@ -30,30 +31,39 @@ def nba_predict():
     results = results.append(get_monthly_results(season, "april"))
     results = results.append(get_monthly_results(season, "may"))
     results = results.append(get_monthly_results(season, "june"))
-    '''
-    results = results.reset_index()
-    results.loc[:5]
+    print(tabulate(results.iloc[:15], headers='keys'))
 
-    # This is our scoring mechanism. f1_score uses both wins and loses
-    scorer = make_scorer(f1_score, pos_label=None, average='weighted')
+    # Clean up the dataframe a bit
+    results.columns = ["Date", 
+            "Start (ET)", 
+            "Away Team", 
+            "Away Points", 
+            "Home Team", 
+            "Home Points", 
+            "Score Type", 
+            "OT?",
+            "Attend.",
+            "Arena",
+            "Notes"]
+    results.drop(["Start (ET)", "Score Type", "OT?", "Attend.", "Arena", "Notes"], axis="columns", inplace=True)
 
     # Add the Home Win column
-    results["Home Win"] = results["Home"] > results["Away"]
+    results["Home Win"] = results["Home Points"] > results["Away Points"]
 
     # Our "class values"
     y_true = results["Home Win"].values
-    results.loc[:5]
 
     n_games = results['Home Win'].count()
     n_home_wins = results['Home Win'].sum()
     win_percentage = n_home_wins / n_games
 
-    print("\nHome win percentage: {0:.1f}%".format(100 * win_percentage))
+    print("\nHome win percentage: {0:.1f}%\n".format(100 * win_percentage))
     
     #y_pred = [1] * len(y_true)
     #print("F1: {:.4f}".format(f1_score((y_true, y_pred, pos_label=None, average='weighted'))))
 
     # Add columns for showing if teams won their last game
+    '''
     results["Home Last Win"] = False
     results["Away Last Win"] = False
     won_last = defaultdict(int)
@@ -66,11 +76,12 @@ def nba_predict():
         #Set Current win
         won_last[home_team] = row["Home Win"]
         won_last[away_team] = not row["Home Win"]
+    '''
 
     # Get ranking
     clf = DecisionTreeClassifier(random_state=14)
 
-    print(tabulate(results, headers='keys'))
+    print(tabulate(results.iloc[:15], headers='keys'))
 
 
 def nba_games():

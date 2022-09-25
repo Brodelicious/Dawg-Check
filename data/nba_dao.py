@@ -89,7 +89,23 @@ def get_season_summary_per_game_stats(season):
 
 def get_monthly_results(season, month):
     url = 'https://www.basketball-reference.com/leagues/NBA_' + season + '_games-' + month + '.html'
+    '''
     monthly_results = get_table(url, 'schedule')
-    return monthly_results.rename(columns={"Home/Neutral": "Home", "Visitor/Neutral": "Away"})
+
+    # Clean up the dataframe a bit
+    monthly_results.columns = ["Date", 
+            "Start (ET)", 
+            "Away Team", 
+            "Away Points", 
+            "Home Team", 
+            "Home Points", 
+            "Score Type", 
+            "OT?",
+            "Attendence",
+            "Arena",
+            "Notes"]
+ 
+    '''
+    return get_table(url, 'schedule')
 
 
