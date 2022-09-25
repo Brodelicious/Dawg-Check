@@ -3,7 +3,7 @@ from services.nba_service import *
 from helpers.export import export
 
 
-print("\n~~~ Hello, mush. Welcome to the MUSH MASTER 3000 ~~~")
+print("\n~~~ Hello, mush. Welcome to the DAWG CHECK experience ~~~")
 
 
 def main():
