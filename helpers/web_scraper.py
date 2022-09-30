@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 import requests
+from requests.api import request
 
 
 def get_table(url, table_name):
@@ -19,6 +20,7 @@ def get_table(url, table_name):
         table = soup.find("table",{"class":table_name})
 
     else:
+        print("\nSorry, boss. Couldn't find table with the given name\n")
         return
 
     headers = [th.getText() for th in table.findAll('tr', limit=2)[0].findAll('th')]
@@ -31,6 +33,21 @@ def get_table(url, table_name):
 
     return df
 
+
+def get_commented_table(url, table_index):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.text, features="html.parser")
+
+    comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+    tables = []
+    for each in comments:
+        if 'table' in each:
+            try:
+                tables.append(pd.read_html(each)[0])
+            except:
+                continue
+
+    return tables[table_index]
 
 # For sports-reference.com game previews
 def get_previews(url):

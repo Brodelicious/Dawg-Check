@@ -64,6 +64,9 @@ def main():
         print("\"nba team stats\" will return the stats for a team of your choice")
         print("\"nba odds\" will return the odds data for today's games")
         print("\"nba games\" will show today's NBA games")
+    if command == "exit" and running == False:
+        running = True
+        return
     else:
         if running == False:
             print("what? (type \"help\" for a list of commands)")

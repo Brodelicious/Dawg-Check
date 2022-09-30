@@ -97,6 +97,10 @@ def nba_predict():
     print("\nUsing whether the home team is ranked higher:")
     print("\nF1: {0:.4f}\n".format(np.mean(scores)))
 
+    # Predictions using standings from the previous season
+    standings = get_expanded_standings(season)
+    print(standings)
+
     return
 
 
