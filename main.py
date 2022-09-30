@@ -20,11 +20,18 @@ def main():
         running = True
         mlb_team_stats()
         #export(games, str(date.today()) + "_odds")
-
+    if command == "mlb games" and running == False:
+        running = True
+        mlb_games()
+        #export(games, str(date.today()) + "_odds")
+ 
 # NBA Commands
     if command == "nba predict" and running == False:
         running = True
         nba_predict()
+    if command == "nba predict 2" and running == False:
+        running = True
+        nba_predict_2()
     if command == "nba odds" and running == False:
         running = True
         nba_odds()
@@ -47,7 +54,11 @@ def main():
     if command == "nba monthly results" and running == False:
         running = True
         nba_get_monthly_results()
+    if command == "nba season results" and running == False:
+        running = True
+        nba_get_season_results()
 
+# Other Commands
     if command == "help" and running == False:
         print("\nCommands:")
         print("\"nba team stats\" will return the stats for a team of your choice")

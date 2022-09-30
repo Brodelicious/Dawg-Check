@@ -6,8 +6,12 @@ from helpers.export import export
 
 
 def get_games():
-    url = 'https://www.espn.com/nba/schedule'
-    return get_schedule_table(url, 'schedule has-team-logos align-left')
+    url = "https://www.basketball-reference.com/previews/"
+    games = get_previews(url)
+    return games
+    # When scraping from ESPN website
+    #url = 'https://www.espn.com/nba/schedule'
+    #return get_schedule_table(url, 'schedule has-team-logos align-left')
 
 
 def get_conference_standings(season, conference):
@@ -89,7 +93,6 @@ def get_season_summary_per_game_stats(season):
 
 def get_monthly_results(season, month):
     url = 'https://www.basketball-reference.com/leagues/NBA_' + season + '_games-' + month + '.html'
-    '''
     monthly_results = get_table(url, 'schedule')
 
     # Clean up the dataframe a bit
@@ -105,7 +108,30 @@ def get_monthly_results(season, month):
             "Arena",
             "Notes"]
  
-    '''
-    return get_table(url, 'schedule')
+    return monthly_results
+
+
+def get_season_results(season, include_playoffs):
+    # Get the season results
+    results = get_monthly_results(season, "october")
+    results = results.append(get_monthly_results(season, "november"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "december"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "january"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "february"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "march"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "april"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "may"), ignore_index=True)
+    results = results.append(get_monthly_results(season, "june"), ignore_index=True)
+
+    # Drop the playoff games if requested
+    if include_playoffs == False:
+        playoffs_start = results.loc[results["Date"] == "Playoffs"].index[0]
+        results.drop(results.index[playoffs_start:], inplace=True)
+
+    # Can't compare scores correctly when they're objects so we need to convert them
+    results["Away Points"] = pd.to_numeric(results["Away Points"])
+    results["Home Points"] = pd.to_numeric(results["Home Points"])
+
+    return results
 
 

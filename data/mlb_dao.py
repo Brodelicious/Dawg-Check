@@ -5,8 +5,8 @@ from helpers.export import export
 
 
 def get_games():
-    url = 'www.baseball-reference.com/previews'
-    return get_div(url, 'game_summary nohover')
+    url = 'http://www.baseball-reference.com/previews/'
+    return get_table(url, "teams")
 
 
 def get_al_central_standings():
