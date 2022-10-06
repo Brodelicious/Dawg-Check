@@ -6,7 +6,8 @@ from helpers.export import export
 
 def get_games():
     url = 'http://www.baseball-reference.com/previews/'
-    return get_table(url, "teams")
+    return get_previews(url)
+    #return get_table(url, "teams")
 
 
 def get_al_central_standings():
@@ -17,28 +18,22 @@ def get_al_central_standings():
 
 def get_team_stats(team, season):
     url = "https://www.baseball-reference.com/teams/" + team + "/" + season + ".shtml"
-
     batting_stats = get_table(url, "team_batting")
     pitching_stats = get_table(url, "team_pitching")
-
     #export(df, str(date.today()) + "_odds")
     return batting_stats, pitching_stats
 
 
 def get_team_batting(team, season):
     url = "https://www.baseball-reference.com/teams/" + team + "/" + season + ".shtml"
-
     batting_stats = get_table(url, "team_batting")
-
     #export(df, str(date.today()) + "_odds")
     return batting_stats
 
 
 def get_team_pitching(team, season):
     url = "https://www.baseball-reference.com/teams/" + team + "/" + season + ".shtml"
-
     pitching_stats = get_table(url, "team_pitching")
-
     #export(df, str(date.today()) + "_odds")
     return pitching_stats
 

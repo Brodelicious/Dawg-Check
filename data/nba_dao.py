@@ -7,8 +7,10 @@ from helpers.export import export
 
 def get_games():
     url = "https://www.basketball-reference.com/previews/"
-    games = get_previews(url)
+    games = get_table(url, 'teams')
+    #games = get_previews(url)
     return games
+
     # When scraping from ESPN website
     #url = 'https://www.espn.com/nba/schedule'
     #return get_schedule_table(url, 'schedule has-team-logos align-left')
@@ -24,8 +26,29 @@ def get_conference_standings(season, conference):
         return standings
     
     else:
-        print("This only works for seasons 2016 and onward right now :-/")
+        print("This only works for seasons 2016 and onward :-/")
         return ""
+
+
+def get_division_Standings(season, conference):
+    url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_standings.html#all_confs_standings_E"
+    
+    if int(season) <= 2015:
+        # The tables in basketball reference are named confs_standings_E and confs_standings_W
+        # Because of this, we only get the first letter of the input from the user in case they type "Eastern conference" for example
+        standings = get_table(url, "division_standings_" + conference[0].upper())
+        return standings
+    
+    else:
+        print("This only works for seasons 2015 and earlier :-/")
+        return ""
+
+
+def get_expanded_standings(season):
+    url = "https://www.basketball-reference.com/leagues/NBA_" + season + "_standings.html"
+    standings = get_commented_table(url, 'expanded_standings')
+    #standings.set_index('Team')
+    return standings
 
 
 def get_per_game_stats(season):

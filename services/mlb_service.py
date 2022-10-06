@@ -16,10 +16,8 @@ def mlb_standings():
 
 def mlb_games():
     print("\nMLB Games Today:\n")
-    games = get_games()
+    print(get_games())
 
-    for game in games:
-        print(game)
     return
 
 

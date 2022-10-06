@@ -29,9 +29,9 @@ def main():
     if command == "nba predict" and running == False:
         running = True
         nba_predict()
-    if command == "nba predict 2" and running == False:
+    if command == "nba predict tutorial" and running == False:
         running = True
-        nba_predict_2()
+        nba_predict_tutorial()
     if command == "nba odds" and running == False:
         running = True
         nba_odds()

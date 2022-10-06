@@ -1,26 +1,40 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from datetime import date
+from helpers.model import predict
 from helpers.web_scraper import *
 from helpers.export import export
 from data.nba_dao import *
-from sklearn.metrics import f1_score, make_scorer, classification_report
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import scale
-from sklearn.svm import SVC
 from tabulate import tabulate
-from collections import defaultdict
-from IPython.display import display
-from pandas.plotting import scatter_matrix
-import matplotlib.pyplot as plt
-#import xgboost as xgb
 
+def nba_predict():
+    import numpy as np
+    from sklearn.metrics import f1_score, make_scorer, classification_report
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.model_selection import cross_val_score
+    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import classification_report
+    from collections import defaultdict
+    import seaborn as sns
+
+    return
 
 # Much of this code was based off of or taken from this presentation:
 # https://www.youtube.com/watch?v=k7hSD_-gWMw&t=312s
-def nba_predict():
+def nba_predict_tutorial():
+    import numpy as np
+    from sklearn.metrics import f1_score, make_scorer, classification_report
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.model_selection import cross_val_score
+    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import classification_report
+    from collections import defaultdict
+    import seaborn as sns
+
     # Get the results for the season
     season = input("\nWhich season?\n")
     results = get_season_results(season, False)
@@ -49,7 +63,7 @@ def nba_predict():
     # Compute the actual values for these
     # Did the home and away teams win their last game?
     # Add columns for showing if teams won their last game
-    # Note: this is inneficient
+    # Note: this is inneficient of setting these values
     results["Home Last Win"] = False
     results["Away Last Win"] = False
     won_last = defaultdict(int)
@@ -89,55 +103,155 @@ def nba_predict():
         else:
             win_streak[away_team] += 1
             win_streak[home_team] = 0
-    print(tabulate(results.iloc[50:60][["Date", "Home Team", "Home Points", "Away Team", "Away Points", "Home Win", "Home Win Streak", "Away Win Streak"]], headers='keys'))
     # Predictions using the win streaks
     clf = DecisionTreeClassifier(random_state=14)
     x_win_streak = results[["Home Last Win", "Away Last Win", "Home Win Streak", "Away Win Streak"]].values
     scores = cross_val_score(clf, x_win_streak, y_true, scoring=scorer)
-    print("\nUsing whether the home team is ranked higher:")
-    print("\nF1: {0:.4f}\n".format(np.mean(scores)))
+    print("Using whether the home team has a higher win streak:")
+    print("F1: {0:.4f}\n".format(np.mean(scores)))
 
     # Predictions using standings from the previous season
-    standings = get_expanded_standings(season)
-    print(standings)
+    standings = get_expanded_standings(str(int(season) - 1))
+    standings.set_index('Team', inplace=True)
+    #print("Previous season's standings:")
+    #print(tabulate(standings, headers='keys'))
 
-    return
+    def home_team_ranks_higher(row):
+        home_team = row['Home Team']    
+        away_team = row['Away Team']    
+        # To do:
+        # Make a dict of teams that have changed their names
+        # so we don't have to hard code it here
+        if season == '2014':
+            if home_team == 'New Orleans Pelicans':
+                home_team = 'New Orleans Hornets'
+            if away_team == 'New Orleans Pelicans':
+                away_team = 'New Orleans Hornets'
+        if season == '2015':
+            if home_team == 'Charlotte Hornets':
+                home_team = 'Charlotte Bobcats'
+            if away_team == 'Charlotte Hornets':
+                away_team = 'Charlotte Bobcats'
+        home_rank = standings.loc[home_team]['Rk']
+        away_rank = standings.loc[away_team]['Rk']
+        return home_rank < away_rank # Ranking higher means having a lower number
 
+    # Applying the function allows us to avoid setting up a for loop and returns a series
+    results['Home Team Ranks Higher'] = results.apply(home_team_ranks_higher, axis=1)
+    #print(tabulate(results.iloc[:5][["Date", "Home Team", "Home Points", "Away Team", "Away Points", "Home Win", "Home Team Ranks Higher"]], headers='keys'))
+    x_home_higher = results[["Home Last Win", "Away Last Win", "Home Team Ranks Higher"]].values
+    clf = DecisionTreeClassifier(random_state=14)
+    scores = cross_val_score(clf, x_home_higher, y_true, scoring=scorer)
+    print("Using whether the home team ranked higher last season:")
+    print("F1: {0:.4f}\n".format(np.mean(scores)))
 
-# https://www.youtube.com/watch?v=6tQhoUuQrOw&t=125s
-def nba_predict_2():
-    # Get the results for the season
-    season = input("\nWhich season?\n")
-    data = get_season_results(season, False)
-    #display(data.head())
+    # Now we're going to try changing the parameters
+    # We list all the parameters we want to try in the parameter_space
+    # and GridSearchCV will try them will all different values.
+    # For decision trees the different parameters don't matter as much though.
+    # A support (or did he say sport?) vector machine works better with this
+    parameter_space = {"max_depth": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20],}
+    clf = DecisionTreeClassifier(random_state=14)
+    grid = GridSearchCV(clf, parameter_space, scoring=scorer)
+    grid.fit(x_home_higher, y_true)
+    print("Using grid search to find the best parameter values:")
+    print("F1: {0:.4f}\n".format(grid.best_score_))
 
-    # Add the Home Win column
-    data["Home Win"] = data["Away Points"] < data["Home Points"]
+    # Now we asses whether the home team won
+    # the last time they played the away team
+    last_game_winner = defaultdict(int)
+    def home_team_won_last(row):
+        home_team = row["Home Team"]
+        away_team = row["Away Team"]
+        # Sort for a consistent ordering
+        teams = tuple(sorted([home_team, away_team]))
+        result = 1 if last_game_winner[teams] == row["Home Team"] else 0
+        # Update the record for their next encounter
+        winner = row["Home Team"] if row["Home Win"] else row["Away Team"]
+        last_game_winner[teams] = winner
+        return result
+    results["Home Team Won Last"] = results.apply(home_team_won_last, axis=1)
+    print(tabulate(results.iloc[90:100][["Date", "Home Team", "Home Points", "Away Team", "Away Points", "Home Win", "Home Team Won Last"]], headers='keys'))
+    x_home_higher = results[["Home Last Win", "Away Last Win", "Home Team Ranks Higher", "Home Team Won Last"]].values
+    clf = DecisionTreeClassifier(random_state=14)
+    scores = cross_val_score(clf, x_home_higher, y_true, scoring=scorer)
+    print("\nUsing whether the home team won their last game against the away team:")
+    print("F1: {0:.4f}".format(np.mean(scores)))
 
-    # What is the win rate for the home team?
-    n_games = data.shape[0]
-    n_features = data.shape[1] - 1
-    n_home_wins = data["Home Win"].sum()
-    home_win_rate = (float(n_home_wins) / n_games) * 100
-    print(home_win_rate)
+    # Using a label encoder to assign a number to each team
+    encoding = LabelEncoder()
+    encoding.fit(results["Home Team"].values)
+    home_teams = encoding.transform(results["Home Team"].values)
+    away_teams = encoding.transform(results["Away Team"].values)
+    x_teams = np.vstack([home_teams, away_teams]).T
+    #print(x_teams[:5], x_teams.shape)
+    # OneHotEncoder will take each feature (numbers assigned to teams)
+    # and will create a new feature that will ask "Was the home team ______".
+    # This turns a category into something that data mining algorithms can understand.
+    onehot = OneHotEncoder()
+    x_teams = np.asarray(onehot.fit_transform(x_teams).todense())
+    print("\nHome:", x_teams[0,:30])
+    print("Away:", x_teams[0,:30])
+    clf = RandomForestClassifier(random_state=14)
+    scores = cross_val_score(clf, x_teams, y_true, scoring=scorer)
+    print("\nUsing full team labels and random forest classifier:")
+    print("F1: {0:.4f}".format(np.mean(scores)))
 
-    # Cool scatter plot thing
-    scatter_matrix(data[['Home Points', 'Away Points', 'Attendence']], figsize=(10,10))
-    plt.show(block=True)
+    # Now we're going to try to improve the parameters
+    parameter_space = {
+                "max_features": [2, 10, 50, 'sqrt'],
+                "n_estimators": [50, 100, 200],
+                "criterion": ["gini", "entropy"],
+                "min_samples_leaf": [1, 2, 4, 6],
+            }
+    clf = RandomForestClassifier(random_state=14)
+    grid = GridSearchCV(clf, parameter_space, scoring=scorer)
+    grid.fit(x_teams, y_true)
+    print("\nAfter improving the parameter_space:")
+    print("F1: {0:.4f}".format(grid.best_score_))
+    print("Best parameters:", grid.best_estimator_)
+
+    # Now we combine the team features with the other features
+    x_all = np.hstack(([x_home_higher, x_teams]))
+    print(x_all.shape)
+    clf = DecisionTreeClassifier(random_state=14)
+    scores = cross_val_score(clf, x_all, y_true, scoring=scorer)
+    print("\nUsing team features combined with new parameters:")
+    print("F1: {0:.4f}".format(np.mean(scores)))
     
-    # Separate into feature set and target variable
-    # FTR = Full Time Result
-    x_all = data.drop(['Home Win'],1)
-    y_all = data['Home Win']
+    # Now we're going to try to improve the parameters with the combined features
+    parameter_space = {
+                "max_features": [2, 10, 50, 'sqrt'],
+                "n_estimators": [50, 100, 200],
+                "criterion": ["gini", "entropy"],
+                "min_samples_leaf": [1, 2, 4, 6],
+            }
+    clf = RandomForestClassifier(random_state=14)
+    grid = GridSearchCV(clf, parameter_space, scoring=scorer)
+    grid.fit(x_all, y_true)
+    print("\nAfter improving the parameter_space for the combined features:")
+    print("F1: {0:.4f}".format(grid.best_score_))
+    print("Best parameters:", grid.best_estimator_)
 
-    # Standardizing the data
+    # Graph time
+    labels = ["Baseline", "Basic Features (DT)", "Teams (DT)", "Teams (RF)", "All (DT)", "All (RF - tuned)"]
+    scores = [0.4261, 0.6028, 0.5967, 0.6049, 0.6034, 0.6384]
+    sns.set(style="darkgrid", context="talk")
+    sns.barplot(x=labels, y=scores);
+
+    grid.fit(x_all, y_true)
+    y_pred = grid.predict(x_all)
+    print("\n")
+    print(classification_report(y_true, y_pred))
+    print("This results in getting {:.1f}% of predictions correct!".format(100*np.mean(y_pred == y_true)))
 
     return
+
 
 
 def nba_games():
     print("\nNBA Games Tonight:\n")
-
     print(get_games())
 
     return
