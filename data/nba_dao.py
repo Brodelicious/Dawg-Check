@@ -1,8 +1,30 @@
 import requests
 import pandas as pd
+import seaborn as sns
+import numpy as np
+import time, os
+import datetime
+import re
 from datetime import date
 from helpers.web_scraper import *
 from helpers.export import export
+
+
+def get_season_odds(season):
+    url = 'https://oddspedia.com/us/basketball/usa/nba/odds'
+    season_odds = get_odds_with_selenium(url, season)
+
+    return season_odds
+
+
+'''
+def get_season_odds(season):
+    season = str(int(season)-1) + '-' + season
+    url = 'https://www.oddsportal.com/basketball/usa/nba-{}/results/'.format(season)
+    season_odds = get_table_in_div(url, "tournamentTable")
+
+    return get_page_html(url)
+'''
 
 
 def get_games():
