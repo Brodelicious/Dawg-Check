@@ -10,9 +10,10 @@ from helpers.web_scraper import *
 from helpers.export import export
 
 
-def get_season_odds(season):
-    url = 'https://oddspedia.com/us/basketball/usa/nba/odds'
-    season_odds = get_odds_with_selenium(url, season)
+def get_season_odds():
+    #oddportal_url = 'https://www.oddsportal.com/basketball/usa/nba/results'
+    oddspedia_url = 'https://www.oddspedia.com/us/basketball/usa/nba/odds'
+    season_odds = get_oddspedia_spreads(oddspedia_url)
 
     return season_odds
 

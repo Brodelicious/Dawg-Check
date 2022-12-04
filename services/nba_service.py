@@ -16,11 +16,16 @@ def nba_games():
     return
 
 
-def nba_season_odds():
-    season = input("\nWhat season, bossman? (yy/yy)\n")
-    season_odds = get_season_odds(season)
+def nba_prop_odds():
+    url = 'https://www.bettingpros.com/nba/picks/prop-bets/bet/points/'
+    print(get_prop_odds(url))
 
-    print("\nNBA " + season + " Season Odds:\n")
+
+def nba_season_odds():
+    #season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
+    season_odds = get_season_odds()
+
+    print("\nNBA Season Spreads:\n")
     print(season_odds)
 
     return
@@ -86,7 +91,7 @@ def nba_get_monthly_results():
 def nba_get_season_results():
     # Get the season results
     season = input("\nWhat season?\n")
-    include_playoffs = input("\nDo you want to include the playoff games? (y/n)")
+    include_playoffs = input("\nDo you want to include the playoff games? (y/n) ")
     if include_playoffs == "y":
         include_playoffs = True
     elif include_playoffs == "n":
