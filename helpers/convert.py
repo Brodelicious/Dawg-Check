@@ -45,6 +45,5 @@ def convert_sports_reference_dates(date):
     else:
         print("Month not recognized")
     date = date_vars[3] + '-' + date_vars[1] + '-' + date_vars[2]
-    print(date)
     return date
 
