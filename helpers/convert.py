@@ -14,3 +14,37 @@ def convert_american(odds):
     else:
         print("invalid input")
         return
+
+def convert_sports_reference_dates(date):
+    date = date.replace(',','')
+    date_vars = date.split(' ')
+    if date_vars[1] == 'Jan':
+        date_vars[1] = '2'
+    elif date_vars[1] == 'Feb':
+        date_vars[1] = '3'
+    elif date_vars[1] == 'Mar':
+        date_vars[1] = '4'
+    elif date_vars[1] == 'Apr':
+        date_vars[1] = '5'
+    elif date_vars[1] == 'May':
+        date_vars[1] = '6'
+    elif date_vars[1] == 'Jun':
+        date_vars[1] = '7'
+    elif date_vars[1] == 'Jul':
+        date_vars[1] = '8'
+    elif date_vars[1] == 'Aug':
+        date_vars[1] = '8'
+    elif date_vars[1] == 'Sep':
+        date_vars[1] = '9'
+    elif date_vars[1] == 'Oct':
+        date_vars[1] = '10'
+    elif date_vars[1] == 'Nov':
+        date_vars[1] = '11'
+    elif date_vars[1] == 'Dec':
+        date_vars[1] = '12'
+    else:
+        print("Month not recognized")
+    date = date_vars[3] + '-' + date_vars[1] + '-' + date_vars[2]
+    print(date)
+    return date
+

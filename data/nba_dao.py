@@ -5,27 +5,16 @@ import numpy as np
 import time, os
 import datetime
 import re
-from datetime import date
+#from datetime import date, datetime
 from helpers.web_scraper import *
-from helpers.export import export
+from helpers.convert import *
 
 
-def get_season_odds():
-    #oddportal_url = 'https://www.oddsportal.com/basketball/usa/nba/results'
-    oddspedia_url = 'https://www.oddspedia.com/us/basketball/usa/nba/odds'
-    season_odds = get_oddspedia_spreads(oddspedia_url)
+def get_season_spreads():
+    url = 'https://www.bettingpros.com/nba/odds/spread/'
+    season_odds = scrape_season_spreads(url, 'NBA')
 
     return season_odds
-
-
-'''
-def get_season_odds(season):
-    season = str(int(season)-1) + '-' + season
-    url = 'https://www.oddsportal.com/basketball/usa/nba-{}/results/'.format(season)
-    season_odds = get_table_in_div(url, "tournamentTable")
-
-    return get_page_html(url)
-'''
 
 
 def get_games():
@@ -154,6 +143,7 @@ def get_monthly_results(season, month):
             "Arena",
             "Notes"]
  
+    monthly_results['Date'] = [convert_sports_reference_dates(date) for date in monthly_results['Date']]
     return monthly_results
 
 

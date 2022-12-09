@@ -16,17 +16,27 @@ def nba_games():
     return
 
 
+def nba_spread_predict():
+    season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
+    season_stats = get_season_results(2023, False)
+    season_spreads = get_season_spreads(2023, 'NBA')
+
+    season
+
+
 def nba_prop_odds():
     url = 'https://www.bettingpros.com/nba/picks/prop-bets/bet/points/'
     print(get_prop_odds(url))
 
 
-def nba_season_odds():
+def nba_season_spreads():
     #season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
-    season_odds = get_season_odds()
+    season_odds = get_season_spreads()
 
     print("\nNBA Season Spreads:\n")
     print(season_odds)
+
+    #export(season_odds, '{}_spreads'.format(season))
 
     return
 
