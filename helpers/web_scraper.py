@@ -39,13 +39,11 @@ def scrape_season_spreads(url, league):
     date_list = [base - datetime.timedelta(days=x) for x in range(delta.days+1)]
     date_list = [d.strftime('%Y-%m-%d') for d in date_list]
 
-    headers=['Away Team', 'Away Line', 'Away Odds', 'Home Team', 'Home Line', 'Home Odds']
     spread_df = pd.DataFrame()
 
     for date in date_list:
         driver.get('https://www.bettingpros.com/nba/odds/spread/?date=' + date)
-        print('\n' + date)
-        time.sleep(3)
+        time.sleep(5)
         games = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
         for game in games:
             teams = game.find_elements(By.CLASS_NAME, 'team-overview__team-name')
@@ -57,7 +55,6 @@ def scrape_season_spreads(url, league):
             away_odds = odds[0].text.strip('()')
             home_line = lines[1].text
             home_odds = odds[1].text.strip('()')
-            print('{} {} ({}) @ {} {} ({})'.format(away_team, away_line, away_odds, home_team, home_line, home_odds))
 
             game_df = pd.DataFrame({'Date':date,
                     'Away Team':away_team, 

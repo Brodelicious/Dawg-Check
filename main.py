@@ -3,7 +3,31 @@ from services.nba_service import *
 from helpers.export import export
 
 
-print("\n~~~ Hello, mush. Welcome to the DAWG CHECK experience ~~~")
+print('\n~~~ Hello, mush. Welcome to the DAWG CHECK experience ~~~')
+print('''
+         ,--._______,-. 
+       ,/,   ,    .  ,_`-. 
+      / /  ,/ , _`  \. |  )       `-. . 
+     (_/;````/ ```-._ ` \/ ______    \ \ 
+       : ,o.-`- ,o.  )\` -`      `---.) ) 
+       : , d8b ^-.   `|   `.      `    `. 
+       |/ __:_     `. |  ,  `       `    \ 
+       | ( ,-.`-.    ;`  ;   `       :    ; 
+       | |  ,   `.      /     ;      :    \ 
+       ;-``:::._,`.__),`             :     ; 
+      / ,  `-   `--                  ;     | 
+     /  \                   `       ,      | 
+    (    `     :              :    ,\      | 
+     \   `.    :     :        :  ,/  \    : 
+      \    `|-- `     \ ,`    ,-`     :-.-`; 
+      :     |`--.______;     |        :    : 
+       :    /           |    |         |   \ 
+       |    ;           ;    ;        /     ; 
+     _/--` |   ~grr~   :`-- /         \_:_:_| 
+   ,`,`,`  |           |___ \ 
+   `^._,--`           / , , .) 
+                      `-._,-` 
+''')
 
 
 def main():
@@ -29,7 +53,7 @@ def main():
     if command == "nba predict" and running == False:
         running = True
         nba_predict()
-    if command == "nba season spread" and running == False:
+    if command == "nba season spreads" and running == False:
         running = True
         nba_season_spreads()
     if command == "nba odds" and running == False:
