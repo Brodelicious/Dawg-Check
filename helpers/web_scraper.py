@@ -13,6 +13,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 #from selenium.webdriver.chrome.options import Options
 import datetime
 import time
+import csv
+import os
 
 
 def scrape_season_spreads(url, league):
@@ -25,46 +27,67 @@ def scrape_season_spreads(url, league):
     driver.get(url)
     driver.maximize_window()
     wait = WebDriverWait(driver, 10)
+    spread_df = pd.DataFrame()
+    today = datetime.date.today()
+    tomorrow = today + datetime.timedelta(days=1)
+
+    if today.month == 10 or 11 or 12:
+        season = str(today.year + 1)
+    else:
+        season = str(today.year)
 
     if(league == 'NBA'):
+        # TO DO: fix the year to not be hard coded
         start_date = datetime.date(2022, 10, 19)
     else:
-        start_date = datetime
-    today = datetime.date.today()
+        start_date = datetime.date(2022, 10, 19)
 
-    query = '?date=' + datetime.date(2022, 10, 19).strftime('%Y-%m-%d')
-    query = url + query
-    base = datetime.datetime.today()
-    delta = base - datetime.datetime(2022, 10, 19)
-    date_list = [base - datetime.timedelta(days=x) for x in range(delta.days+1)]
-    date_list = [d.strftime('%Y-%m-%d') for d in date_list]
+    # Check to see if data from this season has been scraped already
+    file_path = 'data/CSVs/{}_season_spreads.csv'.format(season)
+    if os.path.isfile(file_path):
+        spread_df = pd.read_csv(file_path)
+        last_date = spread_df.iloc[-1]['Date']
+        start_date = datetime.datetime.strptime(last_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+        print('\nFound CSV file. Last updated on: {}. Will check for spreads starting at {}'.format(last_date, start_date))
+    else:
+        print('\n[No existing file found at {}]'.format(file_path))
 
-    spread_df = pd.DataFrame()
+    # Get a list of the dates that need to be scraped
+    #date_list = [today - datetime.timedelta(days=x) for x in range(numdays)]
+    date_range = pd.date_range(start=start_date, end=tomorrow)
+    date_range = [d.strftime('%Y-%m-%d') for d in date_range]
 
-    for date in date_list:
+    for date in date_range:
         driver.get('https://www.bettingpros.com/nba/odds/spread/?date=' + date)
-        time.sleep(5)
-        games = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
-        for game in games:
-            teams = game.find_elements(By.CLASS_NAME, 'team-overview__team-name')
-            away_team = teams[0].text
-            home_team = teams[1].text
-            lines = game.find_elements(By.CLASS_NAME, 'odds-cell__line')
-            odds = game.find_elements(By.CLASS_NAME, 'odds-cell__cost')
-            away_line = lines[0].text
-            away_odds = odds[0].text.strip('()')
-            home_line = lines[1].text
-            home_odds = odds[1].text.strip('()')
+        time.sleep(3)
+        try:
+            games = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
+            for game in games:
+                teams = game.find_elements(By.CLASS_NAME, 'team-overview__team-name')
+                away_team = teams[0].get_attribute('href').split('/')[5].replace('-', ' ').title()
+                if 'Ers' in away_team:
+                    away_team = away_team.replace('Ers', 'ers')
+                home_team = teams[1].get_attribute('href').split('/')[5].replace('-', ' ').title()
+                if 'Ers' in home_team:
+                    home_team = home_team.replace('Ers', 'ers')
+                lines = game.find_elements(By.CLASS_NAME, 'odds-cell__line')
+                odds = game.find_elements(By.CLASS_NAME, 'odds-cell__cost')
+                away_line = lines[0].text
+                away_odds = odds[0].text.strip('()')
+                home_line = lines[1].text
+                home_odds = odds[1].text.strip('()')
 
-            game_df = pd.DataFrame({'Date':date,
-                    'Away Team':away_team, 
-                    'Away Line':away_line, 
-                    'Away Odds':away_odds,
-                    'Home Team':home_team, 
-                    'Home Line':home_line, 
-                    'Home Odds':home_odds}, index=[0])
-            spread_df = spread_df.append(game_df, ignore_index=True)
-        print(spread_df)
+                game_df = pd.DataFrame({'Date':date,
+                        'Away Team':away_team, 
+                        'Away Line':away_line, 
+                        'Away Odds':away_odds,
+                        'Home Team':home_team, 
+                        'Home Line':home_line, 
+                        'Home Odds':home_odds}, index=[0])
+                spread_df = spread_df.append(game_df, ignore_index=True)
+                print(spread_df)
+        except Exception as e:
+            print('\nEXCEPTION [{}] WHEN SCRAPING GAMES ON {}\n'.format(e, date))
 
     driver.quit()
     return spread_df
@@ -86,7 +109,8 @@ def get_table(url, table_name):
         #table = soup.find("table",{"class":table_name})
 
     else:
-        print("Sorry, boss. Couldn't find table with the name \'{}\'\n".format(table_name))
+        print("\nSorry, boss. Couldn't find the table you were looking for.")
+        print('URL: {}\nTable Name: {}'.format(url, table_name))
         return
 
     headers = [th.getText() for th in table.findAll('tr', limit=2)[0].findAll('th')]

@@ -131,15 +131,3 @@ final_df.drop(columns=['index'], inplace=True)
 
 
 print(final_df)
-
-
-
-
-
-
-
-
-
-
-
-

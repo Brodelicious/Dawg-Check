@@ -2,38 +2,47 @@ from services.mlb_service import *
 from services.nba_service import *
 from helpers.export import export
 
+# TO DO: add a dollar sign chain to the dawg
+print('''\n Hello, Mush. Welcome to the...
+  /$$$$$$$   /$$$$$$  /$$      /$$  /$$$$$$         /$$$$$$  /$$   /$$ /$$$$$$$$  /$$$$$$  /$$   /$$
+ | $$__  $$ /$$__  $$| $$  /$ | $$ /$$__  $$       /$$__  $$| $$  | $$| $$_____/ /$$__  $$| $$  /$$/
+ | $$  \ $$| $$  \ $$| $$ /$$$| $$| $$  \__/      | $$  \__/| $$  | $$| $$      | $$  \__/| $$ /$$/
+ | $$  | $$| $$$$$$$$| $$/$$ $$ $$| $$ /$$$$      | $$      | $$$$$$$$| $$$$$   | $$      | $$$$$/
+ | $$  | $$| $$__  $$| $$$$_  $$$$| $$|_  $$      | $$      | $$__  $$| $$__/   | $$      | $$  $$
+ | $$  | $$| $$  | $$| $$$/ \  $$$| $$  \ $$      | $$    $$| $$  | $$| $$      | $$    $$| $$\  $$
+ | $$$$$$$/| $$  | $$| $$/   \  $$|  $$$$$$/      |  $$$$$$/| $$  | $$| $$$$$$$$|  $$$$$$/| $$ \  $$
+ |_______/ |__/  |__/|__/     \__/ \______/        \______/ |__/  |__/|________/ \______/ |__/  \__/
+ ...experience
 
-print('\n~~~ Hello, mush. Welcome to the DAWG CHECK experience ~~~')
-print('''
-         ,--._______,-. 
-       ,/,   ,    .  ,_`-. 
-      / /  ,/ , _`  \. |  )       `-. . 
-     (_/;````/ ```-._ ` \/ ______    \ \ 
-       : ,o.-`- ,o.  )\` -`      `---.) ) 
-       : , d8b ^-.   `|   `.      `    `. 
-       |/ __:_     `. |  ,  `       `    \ 
-       | ( ,-.`-.    ;`  ;   `       :    ; 
-       | |  ,   `.      /     ;      :    \ 
-       ;-``:::._,`.__),`             :     ; 
-      / ,  `-   `--                  ;     | 
-     /  \                   `       ,      | 
-    (    `     :              :    ,\      | 
-     \   `.    :     :        :  ,/  \    : 
-      \    `|-- `     \ ,`    ,-`     :-.-`; 
-      :     |`--.______;     |        :    : 
-       :    /           |    |         |   \ 
-       |    ;           ;    ;        /     ; 
-     _/--` |   ~grr~   :`-- /         \_:_:_| 
-   ,`,`,`  |           |___ \ 
-   `^._,--`           / , , .) 
-                      `-._,-` 
+             ,--._______,-. 
+           ,/,   ,    .  ,_`-. 
+          / /  ,/ , _`  \. |  )       `-. . 
+         (_/;````/ ```-._ ` \/ ______    \ \ 
+           : ,o.-`- ,o.  )\` -`      `---.) ) 
+           : , d8b ^-.   `|   `.      `    `. 
+           |/ __:_     `. |  ,  `       `    \ 
+           | ( ,-.`-.    ;`  ;   `       :    ; 
+           | |  ,   `.      /     ;      :    \ 
+           ;-``:::._,`.__),`             :     ; 
+          / ,  `-   `--                  ;     | 
+         /  \                   `       ,      | 
+        (    `     :              :    ,\      | 
+         \   `.    :     :        :  ,/  \    : 
+          \    `|-- `     \ ,`    ,-`     :-.-`; 
+          :     |`--.______;     |        :    : 
+           :    /           |    |         |   \ 
+           |    ;           ;    ;        /     ; 
+         _/--` |   ~sup~   :`-- /         \_:_:_| 
+       ,`,`,`  |           |___ \ 
+       `^._,--`           / , , .) 
+                          `-._,-` 
 ''')
 
 
 def main():
     running = False
 
-    command = input("\nHow may I help you, mush?\n")
+    command = input("\nHow may I help you?\n")
 
 # MLB Commands
     if command == "mlb standings" and running == False:
@@ -50,9 +59,9 @@ def main():
         #export(games, str(date.today()) + "_odds")
  
 # NBA Commands
-    if command == "nba predict" and running == False:
+    if command == "predict nba spreads" and running == False:
         running = True
-        nba_predict()
+        nba_spread_predict()
     if command == "nba season spreads" and running == False:
         running = True
         nba_season_spreads()

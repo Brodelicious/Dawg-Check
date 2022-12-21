@@ -12,9 +12,8 @@ from helpers.convert import *
 
 def get_season_spreads():
     url = 'https://www.bettingpros.com/nba/odds/spread/'
-    season_odds = scrape_season_spreads(url, 'NBA')
-
-    return season_odds
+    season_spreads = scrape_season_spreads(url, 'NBA')
+    return season_spreads
 
 
 def get_games():
@@ -142,12 +141,52 @@ def get_monthly_results(season, month):
             "Attendence",
             "Arena",
             "Notes"]
- 
+
+    # If we want to delete the playoffs row from the table
+    monthly_results.drop(monthly_results[monthly_results['Date'] == 'Playoffs'].index, axis=0, inplace=True)
+    # Convert the month
     monthly_results['Date'] = [convert_sports_reference_dates(date) for date in monthly_results['Date']]
+    # Can't compare scores correctly when they're objects so we need to convert them
+    monthly_results["Away Points"] = pd.to_numeric(monthly_results["Away Points"])
+    monthly_results["Home Points"] = pd.to_numeric(monthly_results["Home Points"])
+
     return monthly_results
 
 
-def get_season_results(season, include_playoffs):
+def get_current_season_results():
+    # Some setup
+    results = pd.DataFrame()
+    date = datetime.date.today()
+    if date.month == 10 or 11 or 12:
+        season = str(date.year + 1)
+    else:
+        season = str(date.year)
+
+    current_month = date.strftime('%B').lower()
+    season_months = ['october', 
+            'november', 
+            'december', 
+            'january', 
+            'february', 
+            'march', 
+            'april', 
+            'may', 
+            'june']
+    
+    for month in season_months:
+        if month == 'october':
+            results = get_monthly_results(season, month)
+        else:
+            results = results.append(get_monthly_results(season, month), ignore_index=True)
+        if current_month == month:
+            break
+        else:
+            continue
+
+    return results
+
+
+def get_season_results(season):
     # Get the season results
     results = get_monthly_results(season, "october")
     results = results.append(get_monthly_results(season, "november"), ignore_index=True)
@@ -159,14 +198,13 @@ def get_season_results(season, include_playoffs):
     results = results.append(get_monthly_results(season, "may"), ignore_index=True)
     results = results.append(get_monthly_results(season, "june"), ignore_index=True)
 
+    '''
+    this stopped working so sportsreference.com might have changed their table
     # Drop the playoff games if requested
     if include_playoffs == False:
         playoffs_start = results.loc[results["Date"] == "Playoffs"].index[0]
         results.drop(results.index[playoffs_start:], inplace=True)
-
-    # Can't compare scores correctly when they're objects so we need to convert them
-    results["Away Points"] = pd.to_numeric(results["Away Points"])
-    results["Home Points"] = pd.to_numeric(results["Home Points"])
+    '''
 
     return results
 

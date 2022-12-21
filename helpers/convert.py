@@ -15,7 +15,10 @@ def convert_american(odds):
         print("invalid input")
         return
 
+# TO DO: use datetime like an adult instead of these conditionals
 def convert_sports_reference_dates(date):
+    #if(date == 'Playoffs'):
+    #    return date
     date = date.replace(',','')
     date_vars = date.split(' ')
     if date_vars[1] == 'Jan':

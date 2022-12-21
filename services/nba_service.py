@@ -5,6 +5,7 @@ from helpers.web_scraper import *
 from helpers.export import export
 from data.nba_dao import *
 from tabulate import tabulate
+import datetime
 
 def nba_predict():
     return
@@ -17,13 +18,14 @@ def nba_games():
 
 
 def nba_spread_predict():
-    season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
-    season_results = get_season_results(2023, False)
     season_spreads = get_season_spreads()
-    season_data = season_results.merge(season_spreads, how='inner', on=['Date', 'Home Team', 'Away Team'])
-    print(season_data)
-
-    season
+    season_results = get_current_season_results()
+    season_data = pd.merge(season_results, season_spreads, how='inner', on=['Date', 'Home Team', 'Away Team'])
+    season_data["Home Points"] = season_data['Home Points'].fillna(-1).astype('int')
+    season_data["Away Points"] = season_data['Away Points'].fillna(-1).astype('int')
+    
+    print(season_data[['Date','Home Team','Home Points','Home Line','Home Odds',
+                        'Away Team', 'Away Points', 'Away Line', 'Away Odds']])
 
 
 def nba_season_spreads():
@@ -68,48 +70,39 @@ def nba_conference_standings():
 
 def nba_per_game_stats():
     season = input("\nWhat season?\n")
-
     print("\n" + season + " Per Game Stats:")
-
     per_game_stats = get_per_game_stats(season)
     per_game_stats.head(10)
-
     print(per_game_stats)
-
     export(per_game_stats, str(date.today()) + "_per_game_stats")
-
     return
 
 
 def nba_get_monthly_results():
     season = input("\nWhat season?\n")
     month = input("\nWhich month?\n")
-
     monthly_results = get_monthly_results(season, month)
-
     print("\n" + month + " " + season + " Results:")
     print(tabulate(monthly_results, headers='keys'))
-
     export(monthly_results, "NBA_" +  month + "_" + season + "_results")
-
     return
 
 
 def nba_get_season_results():
     # Get the season results
     season = input("\nWhat season?\n")
+    '''
     include_playoffs = input("\nDo you want to include the playoff games? (y/n) ")
-    if include_playoffs == "y":
+    if include_playoffs in ["y", 'yes', 'yessir', 'yuh']:
         include_playoffs = True
-    elif include_playoffs == "n":
+    elif include_playoffs in ["n", 'no', 'nah']:
         include_playoffs = False
     else:
         "Try again Brodie"
-    results = get_season_results(season, include_playoffs)
-
+    '''
+    results = get_season_results(season)
     print("\n" + season + " Results:")
     print(tabulate(results, headers='keys'))
-
     export(results, "NBA_" +  season + "_results")
 
     return
@@ -118,7 +111,6 @@ def nba_get_season_results():
 def nba_team_stats():
     team = input("\nWhich team, bossman?\n")
     season = input("\nWhat season?\n")
-
     print("\n" + team + " " + season + " TEAM STATS")
 
     print("\nRoster:")
