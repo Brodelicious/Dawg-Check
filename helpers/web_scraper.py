@@ -15,35 +15,35 @@ import datetime
 import time
 import csv
 import os
+import logging
 
+logger = logging.getLogger()
 
-def scrape_season_spreads(url, league):
+def scrape_season_odds(league, bet_type):
     # stuff I found online to make weird log messages leave me alone
     #options = Options()
     options = webdriver.ChromeOptions()
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     # Setup
     driver = webdriver.Chrome(service=Service(executable_path=ChromeDriverManager().install()), options=options)
-    driver.get(url)
     driver.maximize_window()
-    wait = WebDriverWait(driver, 10)
-    spread_df = pd.DataFrame()
+    final_df = pd.DataFrame()
     today = datetime.date.today()
-    tomorrow = today + datetime.timedelta(days=1)
+    yesterday = today - datetime.timedelta(days=1)
 
-    if today.month == 10 or 11 or 12:
+    if today.month in [10, 11, 12]:
         season = str(today.year + 1)
     else:
         season = str(today.year)
 
-    if(league == 'NBA'):
+    if(league == 'nba'):
         # TO DO: fix the year to not be hard coded
         start_date = datetime.date(2022, 10, 19)
     else:
         start_date = datetime.date(2022, 10, 19)
 
     # Check to see if data from this season has been scraped already
-    file_path = 'data/CSVs/{}_season_spreads.csv'.format(season)
+    file_path = 'data/CSVs/{}_season_{}.csv'.format(season, bet_type)
     if os.path.isfile(file_path):
         spread_df = pd.read_csv(file_path)
         last_date = spread_df.iloc[-1]['Date']
@@ -53,44 +53,144 @@ def scrape_season_spreads(url, league):
         print('\n[No existing file found at {}]'.format(file_path))
 
     # Get a list of the dates that need to be scraped
-    #date_list = [today - datetime.timedelta(days=x) for x in range(numdays)]
-    date_range = pd.date_range(start=start_date, end=tomorrow)
+    date_range = pd.date_range(start=start_date, end=yesterday)
     date_range = [d.strftime('%Y-%m-%d') for d in date_range]
 
-    for date in date_range:
-        driver.get('https://www.bettingpros.com/nba/odds/spread/?date=' + date)
-        time.sleep(3)
-        try:
-            games = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
-            for game in games:
-                teams = game.find_elements(By.CLASS_NAME, 'team-overview__team-name')
-                away_team = teams[0].get_attribute('href').split('/')[5].replace('-', ' ').title()
-                if 'Ers' in away_team:
-                    away_team = away_team.replace('Ers', 'ers')
-                home_team = teams[1].get_attribute('href').split('/')[5].replace('-', ' ').title()
-                if 'Ers' in home_team:
-                    home_team = home_team.replace('Ers', 'ers')
-                lines = game.find_elements(By.CLASS_NAME, 'odds-cell__line')
-                odds = game.find_elements(By.CLASS_NAME, 'odds-cell__cost')
-                away_line = lines[0].text
-                away_odds = odds[0].text.strip('()')
-                home_line = lines[1].text
-                home_odds = odds[1].text.strip('()')
+    if(bet_type == 'spreads'):
+        for date in date_range:
+            date_df = scrape_spreads(league, driver, date)
+            spread_df = final_df.append(date_df, ignore_index=True)
 
-                game_df = pd.DataFrame({'Date':date,
-                        'Away Team':away_team, 
-                        'Away Line':away_line, 
-                        'Away Odds':away_odds,
-                        'Home Team':home_team, 
-                        'Home Line':home_line, 
-                        'Home Odds':home_odds}, index=[0])
-                spread_df = spread_df.append(game_df, ignore_index=True)
-                print(spread_df)
-        except Exception as e:
-            print('\nEXCEPTION [{}] WHEN SCRAPING GAMES ON {}\n'.format(e, date))
+    if(bet_type == 'props'):
+        for date in date_range:
+            date_df = scrape_props(league, driver, date)
+            spread_df = final_df.append(date_df, ignore_index=True)
 
     driver.quit()
-    return spread_df
+    return final_df
+
+
+def scrape_upcoming_odds(league, bet_type):
+    # stuff I found online to make weird log messages leave me alone
+    #options = Options()
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    # Setup
+    driver = webdriver.Chrome(service=Service(executable_path=ChromeDriverManager().install()), options=options)
+    driver.maximize_window()
+    final_df = pd.DataFrame()
+    today = datetime.date.today()
+    tomorrow = today + datetime.timedelta(days=1)
+
+    date_range = pd.date_range(start=today, end=tomorrow)
+    date_range = [d.strftime('%Y-%m-%d') for d in date_range]
+
+    if bet_type == 'props':
+        for date in date_range:
+            date_df = scrape_props(league, driver, date)
+            final_df = final_df.append(date_df, ignore_index=True)
+
+    if bet_type == 'spreads':
+        for date in date_range:
+            date_df = scrape_spreads(league, driver, date)
+            final_df = final_df.append(date_df, ignore_index=True)
+
+    driver.quit()
+    return final_df
+
+
+def scrape_props(league, driver, date):
+    props_df = pd.DataFrame()
+    league = league.lower()
+    url = 'https://www.bettingpros.com/{}/odds/player-props/points'.format(league)
+    wait = WebDriverWait(driver, 30)
+    driver.get(url + '/?date=' + date)
+    time.sleep(5)
+    try:
+        props = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
+        #props = driver.find_elements(By.CLASS_NAME, 'odds-offer')
+        for prop in props:
+            player = prop.find_element(By.CLASS_NAME, 'odds-player__heading').text
+            lines = prop.find_elements(By.CLASS_NAME, 'odds-cell__line')
+
+            # Create the dataframe for the game and append it to the main dataframe
+            prop_df = pd.DataFrame({'Date':date,
+                    'Player':player, 
+                    'Line':lines[-1].text.split()[1]}, index=[0])
+
+            props_df = props_df.append(prop_df, ignore_index=True)
+
+        return props_df
+
+    except Exception as e:
+        logger.exception('\n[EXCEPTION FOUND ON {}] \n{}'.format(date, str(e)))
+        return
+
+
+def scrape_spreads(league, driver, date):
+    spreads_df = pd.DataFrame()
+    league = league.lower()
+    url = 'https://www.bettingpros.com/{}/odds/spread'.format(league)
+    wait = WebDriverWait(driver, 10)
+    driver.get(url + '/?date=' + date)
+    time.sleep(3)
+
+    try:
+        games = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
+        for game in games:
+            teams = game.find_elements(By.CLASS_NAME, 'team-overview__team-name')
+            away_team = teams[0].get_attribute('href').split('/')[5].replace('-', ' ').title()
+            if 'Ers' in away_team:
+                away_team = away_team.replace('Ers', 'ers')
+            home_team = teams[1].get_attribute('href').split('/')[5].replace('-', ' ').title()
+            if 'Ers' in home_team:
+                home_team = home_team.replace('Ers', 'ers')
+
+            lines = game.find_elements(By.CLASS_NAME, 'odds-cell__line')
+            odds = game.find_elements(By.CLASS_NAME, 'odds-cell__cost')
+
+            # Get the opening lines/odds
+            away_line_open = lines[0].text
+            away_odds_open = odds[0].text.strip('()')
+            home_line_open = lines[1].text
+            home_odds_open = odds[1].text.strip('()')
+            
+            # Get the best lines/odds
+            away_line_best = lines[2].text
+            away_odds_best = odds[2].text.strip('()')
+            home_line_best = lines[3].text
+            home_odds_best = odds[3].text.strip('()')
+
+            # Get the consensus lines/odds
+            away_line_consensus = lines[-2].text
+            away_odds_consensus = odds[-2].text.strip('()')
+            home_line_consensus = lines[-1].text
+            home_odds_consensus = odds[-1].text.strip('()')
+
+            # Create the dataframe for the game and append it to the main dataframe
+            game_df = pd.DataFrame({'Date':date,
+                    'Away Team':away_team, 
+                    'Away Line Open':away_line_open, 
+                    'Away Odds Open':away_odds_open,
+                    'Away Line':away_line_consensus, 
+                    'Away Odds':away_odds_consensus,
+                    'Away Line Best':away_line_best, 
+                    'Away Odds Best':away_odds_best,
+                    'Home Team':home_team, 
+                    'Home Line Open':home_line_consensus, 
+                    'Home Odds Open':home_odds_consensus,
+                    'Home Line':home_line_consensus, 
+                    'Home Odds':home_odds_consensus,
+                    'Home Line Best':home_line_best, 
+                    'Home Odds Best':home_odds_best}, index=[0])
+            spreads_df = spreads_df.append(game_df, ignore_index=True)
+
+        return spreads_df
+
+    except Exception as e:
+        logger.exception('\n[EXCEPTION FOUND ON {}] \n{}'.format(date, str(e)))
+        return
+
 
 
 def get_table(url, table_name):

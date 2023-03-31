@@ -62,6 +62,9 @@ def main():
     if command == "predict nba spreads" and running == False:
         running = True
         nba_spread_predict()
+    if command == "nba season props" and running == False:
+        running = True
+        nba_season_props()
     if command == "nba season spreads" and running == False:
         running = True
         nba_season_spreads()
@@ -90,6 +93,9 @@ def main():
     if command == "nba season results" and running == False:
         running = True
         nba_get_season_results()
+    if command == "nba upcoming props" and running == False:
+        running = True
+        nba_upcoming_props()
 
 # Other Commands
     if command == "help" and running == False:

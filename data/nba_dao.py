@@ -11,9 +11,18 @@ from helpers.convert import *
 
 
 def get_season_spreads():
-    url = 'https://www.bettingpros.com/nba/odds/spread/'
-    season_spreads = scrape_season_spreads(url, 'NBA')
+    season_spreads = scrape_season_odds('nba', 'spreads')
     return season_spreads
+
+
+def get_season_props():
+    season_spreads = scrape_season_odds('nba', 'props')
+    return season_spreads
+
+
+def get_upcoming_props():
+    upcoming_props = scrape_upcoming_odds('nba', 'props')
+    return upcoming_props
 
 
 def get_games():

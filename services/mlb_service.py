@@ -49,7 +49,7 @@ def mlb_team_stats2():
     print("\n" + team + " " + season + " TEAM STATS")
 
     print("\nBatting:")
-    batting_stats = get_table(url, "team_batting")
+    batting_stats = get_(url, "team_batting")
     print(batting_stats)
 
     print("\nPitching:")

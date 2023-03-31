@@ -18,24 +18,39 @@ def nba_games():
 
 
 def nba_spread_predict():
-    season_spreads = get_season_spreads()
-    season_results = get_current_season_results()
-    season_data = pd.merge(season_results, season_spreads, how='inner', on=['Date', 'Home Team', 'Away Team'])
-    season_data["Home Points"] = season_data['Home Points'].fillna(-1).astype('int')
-    season_data["Away Points"] = season_data['Away Points'].fillna(-1).astype('int')
-    
-    print(season_data[['Date','Home Team','Home Points','Home Line','Home Odds',
-                        'Away Team', 'Away Points', 'Away Line', 'Away Odds']])
+
+    return
+
+
+def nba_upcoming_props():
+    print("\nNBA Upcoming Props:\n")
+    props = get_upcoming_props()
+    print(props)
+    #print(tabulate(spreads[['Date', 'Away Team', 'Away Line', 'Away Odds',
+    #                        'Home Team', 'Home Line', 'Home Odds']], headers='keys'))
+    #print(upcoming_spreads)
+
+    return
 
 
 def nba_season_spreads():
     #season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
     season_odds = get_season_spreads()
-
     print("\nNBA Season Spreads:\n")
     print(season_odds)
-
     export(season_odds, '2023_season_spreads')
+
+    return
+
+
+def nba_season_props():
+    #season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
+    season_odds = get_season_props()
+
+    print("\nNBA Season Props:\n")
+    print(season_odds)
+
+    export(season_odds, '2023_season_props')
 
     return
 
