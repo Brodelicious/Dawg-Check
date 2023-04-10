@@ -4,10 +4,14 @@ from helpers.web_scraper import *
 from helpers.export import export
 
 
-def get_games():
-    url = 'http://www.baseball-reference.com/previews/'
-    return get_previews(url)
-    #return get_table(url, "teams")
+def get_upcoming_f5():
+    url = 'https://www.bettingpros.com/mlb/odds/moneyline/?prop=result-after-fifth-inning'
+    return scrape_upcoming_odds(url)
+
+
+def get_season_f5():
+    url = 'https://www.bettingpros.com/mlb/odds/moneyline/?prop=result-after-fifth-inning'
+    return scrape_season_odds('mlb', 'f5', url)
 
 
 def get_al_central_standings():
@@ -20,21 +24,18 @@ def get_team_stats(team, season):
     url = "https://www.baseball-reference.com/teams/" + team + "/" + season + ".shtml"
     batting_stats = get_table(url, "team_batting")
     pitching_stats = get_table(url, "team_pitching")
-    #export(df, str(date.today()) + "_odds")
     return batting_stats, pitching_stats
 
 
 def get_team_batting(team, season):
     url = "https://www.baseball-reference.com/teams/" + team + "/" + season + ".shtml"
     batting_stats = get_table(url, "team_batting")
-    #export(df, str(date.today()) + "_odds")
     return batting_stats
 
 
 def get_team_pitching(team, season):
     url = "https://www.baseball-reference.com/teams/" + team + "/" + season + ".shtml"
     pitching_stats = get_table(url, "team_pitching")
-    #export(df, str(date.today()) + "_odds")
     return pitching_stats
 
 

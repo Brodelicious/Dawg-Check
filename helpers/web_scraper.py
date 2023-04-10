@@ -17,9 +17,11 @@ import csv
 import os
 import logging
 
+
 logger = logging.getLogger()
 
-def scrape_season_odds(league, bet_type):
+
+def scrape_season_odds(league, bet_type, url):
     # stuff I found online to make weird log messages leave me alone
     #options = Options()
     options = webdriver.ChromeOptions()
@@ -36,9 +38,11 @@ def scrape_season_odds(league, bet_type):
     else:
         season = str(today.year)
 
+    # TO DO: fix the year to not be hard coded
     if(league == 'nba'):
-        # TO DO: fix the year to not be hard coded
         start_date = datetime.date(2022, 10, 19)
+    if(league == 'mlb'):
+        start_date = datetime.date(2023, 3, 30)
     else:
         start_date = datetime.date(2022, 10, 19)
 
@@ -56,21 +60,22 @@ def scrape_season_odds(league, bet_type):
     date_range = pd.date_range(start=start_date, end=yesterday)
     date_range = [d.strftime('%Y-%m-%d') for d in date_range]
 
-    if(bet_type == 'spreads'):
+    if 'player-props' in url:
         for date in date_range:
-            date_df = scrape_spreads(league, driver, date)
-            spread_df = final_df.append(date_df, ignore_index=True)
+            #url = 'https://www.bettingpros.com/{}/odds/{}/prop={}/?date={}'.format(league, bet_type, prop, date)
+            date_df = scrape_games(url, driver, date)
+            final_df = final_df.append(date_df, ignore_index=True)
 
-    if(bet_type == 'props'):
+    else:
         for date in date_range:
-            date_df = scrape_props(league, driver, date)
-            spread_df = final_df.append(date_df, ignore_index=True)
+            date_df = scrape_games(url, driver, date)
+            final_df = final_df.append(date_df, ignore_index=True)
 
     driver.quit()
     return final_df
 
 
-def scrape_upcoming_odds(league, bet_type):
+def scrape_upcoming_odds(url):
     # stuff I found online to make weird log messages leave me alone
     #options = Options()
     options = webdriver.ChromeOptions()
@@ -85,21 +90,83 @@ def scrape_upcoming_odds(league, bet_type):
     date_range = pd.date_range(start=today, end=tomorrow)
     date_range = [d.strftime('%Y-%m-%d') for d in date_range]
 
-    if bet_type == 'props':
+    if 'player-props' in url:
         for date in date_range:
-            date_df = scrape_props(league, driver, date)
+            #url = 'https://www.bettingpros.com/{}/odds/{}/prop={}/?date={}'.format(league, bet_type, prop, date)
+            date_df = scrape_games(url, driver, date)
             final_df = final_df.append(date_df, ignore_index=True)
 
-    if bet_type == 'spreads':
+    else:
         for date in date_range:
-            date_df = scrape_spreads(league, driver, date)
-            final_df = final_df.append(date_df, ignore_index=True)
+            try:
+                date_df = scrape_games(url, driver, date)
+                final_df = final_df.append(date_df, ignore_index=True)
+            except Exception as e:
+                # this usually means bookies haven't put out odds for tomorrow
+                logger.exception('\n[EXCEPTION FOUND ON {}] \n{}'.format(date, str(e)))
 
     driver.quit()
     return final_df
 
 
-def scrape_props(league, driver, date):
+def scrape_games(url, driver, date):
+    games_df = pd.DataFrame()
+    wait = WebDriverWait(driver, 10)
+    if '/?' in url:
+        driver.get(url + '&date={}'.format(date))
+    else:
+        driver.get(url + '/?date={}'.format(date))
+    time.sleep(3)
+
+    try:
+        games = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
+        for game in games:
+            teams = game.find_elements(By.CLASS_NAME, 'team-overview__team-name')
+            away_team = teams[0].get_attribute('href').split('/')[5].replace('-', ' ').title()
+            if 'Ers' in away_team:
+                away_team = away_team.replace('Ers', 'ers')
+            home_team = teams[1].get_attribute('href').split('/')[5].replace('-', ' ').title()
+            if 'Ers' in home_team:
+                home_team = home_team.replace('Ers', 'ers')
+
+            lines = game.find_elements(By.CLASS_NAME, 'odds-cell__line')
+
+            # Get the opening lines/odds
+            away_open = lines[0].text
+            home_open = lines[1].text
+            draw_open = lines[2].text
+            
+            # Get the best lines/odds
+            away_best = lines[3].text
+            home_best = lines[4].text
+            draw_best = lines[5].text
+
+            # Get the consensus lines/odds
+            away_consensus = lines[-3].text
+            home_consensus = lines[-2].text
+            draw_consensus = lines[-1].text
+
+            # Create the dataframe for the game and append it to the main dataframe
+            game_df = pd.DataFrame({
+                    'Date':date,
+                    'Game':away_team + ' @ ' + home_team,
+                    'Away Team':away_team, 
+                    'Home Team':home_team, 
+                    'Away':away_consensus, 
+                    'Home':home_consensus, 
+                    'Draw':draw_consensus
+                    }, index=[0])
+            games_df = games_df.append(game_df, ignore_index=True)
+
+        return games_df
+
+    except Exception as e:
+        logger.exception('\n[EXCEPTION FOUND ON {}] \n{}'.format(date, str(e)))
+        return
+
+
+
+def scrape_players(league, driver, date):
     props_df = pd.DataFrame()
     league = league.lower()
     url = 'https://www.bettingpros.com/{}/odds/player-props/points'.format(league)
@@ -108,7 +175,6 @@ def scrape_props(league, driver, date):
     time.sleep(5)
     try:
         props = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'odds-offer')))
-        #props = driver.find_elements(By.CLASS_NAME, 'odds-offer')
         for prop in props:
             player = prop.find_element(By.CLASS_NAME, 'odds-player__heading').text
             lines = prop.find_elements(By.CLASS_NAME, 'odds-cell__line')
@@ -127,6 +193,7 @@ def scrape_props(league, driver, date):
         return
 
 
+'''
 def scrape_spreads(league, driver, date):
     spreads_df = pd.DataFrame()
     league = league.lower()
@@ -190,7 +257,7 @@ def scrape_spreads(league, driver, date):
     except Exception as e:
         logger.exception('\n[EXCEPTION FOUND ON {}] \n{}'.format(date, str(e)))
         return
-
+'''
 
 
 def get_table(url, table_name):
@@ -300,22 +367,6 @@ def get_commented_table(url, table_name):
                 continue
 
     return 
-
-# For sports-reference.com game previews
-def get_previews(url):
-    #pd.options.display.max_columns = None
-    pd.options.display.max_rows = None
-    pd.options.display.width = None
-
-    page = requests.get(url)
-    soup = BeautifulSoup(page.text, features="html.parser")
-
-    previews = []
-    for div in soup.find_all('div', class_= "game_summary nohover"):
-        td = div.find('td', class_="right gamelink")
-        previews.append(td.find('a'))
-
-    return previews
 
 
 def get_page_html(url):

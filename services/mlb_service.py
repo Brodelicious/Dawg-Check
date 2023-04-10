@@ -3,6 +3,7 @@ from datetime import date
 from helpers.web_scraper import *
 from helpers.export import export
 from data.mlb_dao import *
+from tabulate import tabulate
 
 
 def mlb_standings():
@@ -14,9 +15,20 @@ def mlb_standings():
     return
 
 
-def mlb_games():
-    print("\nMLB Games Today:\n")
-    print(get_games())
+def mlb_upcoming_f5():
+    upcoming_f5 = get_upcoming_f5()
+    print("\nMLB Upcoming Games:")
+    print(tabulate(upcoming_f5[['Date', 'Game', 'Away', 'Home', 'Draw']], headers='keys'))
+
+    return
+
+
+def mlb_season_f5():
+    #season = input("\nWhat season, bossman? (yyyy/yyyy)\n")
+    season_f5 = get_season_f5()
+    print("\nMLB Season Spreads:\n")
+    print(tabulate(season_f5[['Date', 'Game', 'Away', 'Home', 'Draw']], headers='keys'))
+    export(season_f5, '2023_season_f5')
 
     return
 

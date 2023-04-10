@@ -11,7 +11,7 @@ from helpers.convert import *
 
 
 def get_season_spreads():
-    season_spreads = scrape_season_odds('nba', 'spreads')
+    season_spreads = scrape_season_odds('nba', 'f5', 'spreads')
     return season_spreads
 
 
