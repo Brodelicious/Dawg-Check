@@ -37,19 +37,19 @@ def scrape_odds(url, start_date, end_date, draws):
 
     if 'player-props' in url:
         for date in date_range:
-            date_df = scrape_players(url, driver, date)
+            date_df = scrape_player_odds(url, driver, date)
             final_df = final_df.append(date_df, ignore_index=True)
 
     else:
         for date in date_range:
-            date_df = scrape_games(url, driver, date, draws)
+            date_df = scrape_game_odds(url, driver, date, draws)
             final_df = final_df.append(date_df, ignore_index=True)
 
     driver.quit()
     return final_df
 
 
-def scrape_games(url, driver, date, draws):
+def scrape_game_odds(url, driver, date, draws):
     games_df = pd.DataFrame()
     wait = WebDriverWait(driver, 10)
     if '/?' in url:
@@ -139,7 +139,7 @@ def scrape_games(url, driver, date, draws):
         return
 
 
-def scrape_players(league, driver, date):
+def scrape_player_odds(league, driver, date):
     props_df = pd.DataFrame()
     league = league.lower()
     url = 'https://www.bettingpros.com/{}/odds/player-props/points'.format(league)

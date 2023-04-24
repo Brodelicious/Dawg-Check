@@ -52,32 +52,24 @@ print('''\n Hello, Mush. Welcome to the...
 
 def main():
     running = False
-
     command = input("\nHow may I help you?\n")
 
 # MLB Commands
     if command == "mlb predict games" and running == False:
         running = True
         mlb_predict_games()
-    if command == "mlb upcoming games" and running == False:
+    if command == "mlb upcoming moneyline" and running == False:
         running = True
-        mlb_upcoming_games()
-    if command == "mlb season games" and running == False:
+        mlb_upcoming_moneyline()
+    if command == "mlb season moneyline" and running == False:
         running = True
-        mlb_season_games()
+        mlb_season_moneyline()
     if command == "mlb upcoming f5" and running == False:
         running = True
         mlb_upcoming_f5()
     if command == "mlb season f5" and running == False:
         running = True
         mlb_season_f5()
-    if command == "mlb standings" and running == False:
-        running = True
-        mlb_standings()
-    if command == "mlb team stats" and running == False:
-        running = True
-        mlb_team_stats()
-        #export(games, str(date.today()) + "_odds")
 
 # NBA Commands
     if command == "predict nba spreads" and running == False:
