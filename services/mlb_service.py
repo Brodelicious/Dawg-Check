@@ -11,6 +11,7 @@ def mlb_predict_games():
     season = datetime.date.today().year
     upcoming_games = get_upcoming_games()
     print(tabulate(upcoming_games, headers='keys'))
+    print(get_box_score('718452', 'pitching'))
 
     return
 

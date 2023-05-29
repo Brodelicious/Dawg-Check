@@ -1,7 +1,5 @@
 import pandas as pd
-from datetime import date
 from helpers.web_scraper import *
-from helpers.export import export
 import os
 import requests
 
@@ -40,7 +38,7 @@ def get_schedule(date):
     return games_df
 
 
-def get_game_stats(gamePk):
+def get_box_score(gamePk, position):
     url = "https://baseballsavant.mlb.com/gf?game_pk={}".format(gamePk)
     payload = {}
     headers = {
@@ -59,8 +57,172 @@ def get_game_stats(gamePk):
     }
     response = requests.request("GET", url, headers=headers, data=payload)
     data = response.json()
-    stats_df = pd.json_normalize(data)
-    return stats_df
+    box_score_df = []
+
+    if position == 'pitching':
+        box_score_df = pd.DataFrame(columns=[
+            'gamePk',
+            'Date',
+            'Team Name',
+            'Name',
+            'Id',
+            'Position',
+            'Status',
+            'IP',
+            'H',
+            'R',
+            'ER',
+            'BB',
+            'K',
+            'HR',
+            'ERA',
+            'WHIP'
+            ])
+
+        for team in data['boxscore']['teams']:
+            for player in data['boxscore']['teams'][team]['players']:
+                # Skip this player if they don't have batting stats
+                if len(data['boxscore']['teams'][team]['players'][player]['stats']['pitching']) == 0:
+                    continue
+                date = data['gameDate']
+                team_name = data['boxscore']['teams'][team]['team']['name']
+                name = data['boxscore']['teams'][team]['players'][player]['person']['fullName']
+                id = data['boxscore']['teams'][team]['players'][player]['person']['id']
+                position = data['boxscore']['teams'][team]['players'][player]['position']['abbreviation']
+                status = data['boxscore']['teams'][team]['players'][player]['status']['code']
+                ip = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['atBats']
+                h = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['hits']
+                r = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['runs']
+                er = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['rbi']
+                bb = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['baseOnBalls']
+                k = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['strikeOuts']
+                hr = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['homeRuns']
+                # If the era is missing it must be manually claculated
+                try:
+                    era = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['era']
+                except Exception as e:
+                    print('\nException caught: {} for {}:{}'.format(e, player, name))
+                    era = (9*er)/ip
+                    print('era manually calculated as (9 * {} er) / {} ip = {} era'.format(er, ip, era))
+                # If the whip is missing it must be manually claculated
+                try:
+                    whip = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['whip']
+                except Exception as e:
+                    print('\nException caught: {} for {}:{}'.format(e, player, name))
+                    whip = (bb+h)/ip
+                    print('whip manually calculated as ({} bb + {} h) / {} ip = {} whip'.format(bb, h, ip, whip))
+
+                box_score_row={
+                    'gamePk':gamePk,
+                    'Date':date,
+                    'Team Name':team_name,
+                    'Name':name,
+                    'Id':id,
+                    'Position':position,
+                    'Status':status,
+                    'IP':ip,
+                    'H':h,
+                    'R':r,
+                    'ER':er,
+                    'BB':bb,
+                    'K':k,
+                    'HR':hr,
+                    'ERA':era,
+                    'WHIP':whip
+                    }
+
+                box_score_df = box_score_df.append(box_score_row, ignore_index=True)
+
+    if position == 'batting':
+        box_score_df = pd.DataFrame(columns=[
+            'gamePk',
+            'Date',
+            'Team Name',
+            'Name',
+            'Id',
+            'Position',
+            'Status',
+            'AB',
+            'R',
+            'H',
+            'RBI',
+            'HR',
+            'BB',
+            'K',
+            'LOB',
+            'TB',
+            'RC',
+            'AVG',
+            'OBP',
+            'SLG',
+            'OPS'
+            ])
+
+        for team in data['boxscore']['teams']:
+            for player in data['boxscore']['teams'][team]['players']:
+                # Skip this player if they don't have batting stats
+                if len(data['boxscore']['teams'][team]['players'][player]['stats']['batting']) == 0:
+                    continue
+                date = data['gameDate']
+                team_name = data['boxscore']['teams'][team]['team']['name']
+                name = data['boxscore']['teams'][team]['players'][player]['person']['fullName']
+                id = data['boxscore']['teams'][team]['players'][player]['person']['id']
+                position = data['boxscore']['teams'][team]['players'][player]['position']['abbreviation']
+                status = data['boxscore']['teams'][team]['players'][player]['status']['code']
+                ab = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['atBats']
+                r = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['runs']
+                h = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['hits']
+                rbi = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['rbi']
+                hr = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['homeRuns']
+                bb = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['baseOnBalls']
+                k = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['strikeOuts']
+                lob = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['leftOnBase']
+                tb = data['boxscore']['teams'][team]['players'][player]['stats']['batting']['totalBases']
+                rc = (h+bb)*tb/(ab+bb)
+                avg = data['boxscore']['teams'][team]['players'][player]['seasonStats']['batting']['avg']
+                obp = data['boxscore']['teams'][team]['players'][player]['seasonStats']['batting']['obp']
+                slg = data['boxscore']['teams'][team]['players'][player]['seasonStats']['batting']['slg']
+                ops = data['boxscore']['teams'][team]['players'][player]['seasonStats']['batting']['ops']
+
+                box_score_row={
+                    'gamePk':gamePk,
+                    'Date':date,
+                    'Team Name':team_name,
+                    'Name':name,
+                    'Id':id,
+                    'Position':position,
+                    'Status':status,
+                    'AB':ab,
+                    'R':r,
+                    'H':h,
+                    'RBI':rbi,
+                    'HR':hr,
+                    'BB':bb,
+                    'K':k,
+                    'LOB':lob,
+                    'TB':tb,
+                    'RC':rc,
+                    'AVG':avg,
+                    'OBP':obp,
+                    'SLG':slg,
+                    'OPS':ops
+                    }
+
+                box_score_df = box_score_df.append(box_score_row, ignore_index=True)
+
+        if position == 'fielding':
+            box_score_df = pd.DataFrame(columns=[
+                'gamePk',
+                'Date',
+                'Team Name',
+                'Name',
+                'Id',
+                'Position',
+            'Status',
+                ''
+                ])
+
+    return box_score_df
 
 
 def get_upcoming_odds(url, draws):
@@ -80,7 +242,7 @@ def get_upcoming_games():
 def get_season_odds(url, season, bet_type, draws):
     file_path = 'data/CSVs/{}_season_{}.csv'.format(season, bet_type)
     today = datetime.date.today()
-    
+
     # Check to see if data from this season has been scraped already
     if os.path.isfile(file_path):
         odds_df = pd.read_csv(file_path)
@@ -107,7 +269,7 @@ def get_season_box_scores(season, position):
     soup = get_page_html('https://www.baseball-reference.com/leagues/majors/{}-schedule.shtml'.format(season))
     games = soup.find_all('p', class_='game')
     print(soup)
-    
+
     for game in games:
         elements = game.find_all('a')
         away_team = elements[0].text.replace(' ', '')
@@ -117,5 +279,5 @@ def get_season_box_scores(season, position):
         print(away_team + position)
         pitching_box_scores = pitching_box_scores.append(get_table(game_link, away_team + position))
         pitching_box_scores = pitching_box_scores.append(get_table(game_link, home_team + position))
-        
+
     return pitching_box_scores
