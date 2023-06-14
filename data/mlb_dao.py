@@ -29,7 +29,7 @@ def get_schedule(date):
         date = str(date)
         away_team = game['teams']['away']['name']
         home_team = game['teams']['home']['name']
-        games_df = games_df.append({'gamePk':gamePk,
+        games_df = games_df._append({'gamePk':gamePk,
             'Date':date,
             'Away Team':away_team,
             'Home Team':home_team}, ignore_index=True)
@@ -108,7 +108,7 @@ def get_box_score(gamePk, position):
                 try:
                     whip = data['boxscore']['teams'][team]['players'][player]['stats']['pitching']['whip']
                 except Exception as e:
-                    print('\nException caught: {} for {}:{}'.format(e, player, name))
+                    print('\nException caught: {} for {}: {}'.format(e, player, name))
                     whip = (bb+h)/ip
                     print('whip manually calculated as ({} bb + {} h) / {} ip = {} whip'.format(bb, h, ip, whip))
 
@@ -131,7 +131,7 @@ def get_box_score(gamePk, position):
                     'WHIP':whip
                     }
 
-                box_score_df = box_score_df.append(box_score_row, ignore_index=True)
+                box_score_df = box_score_df._append(box_score_row, ignore_index=True)
 
     if position == 'batting':
         box_score_df = pd.DataFrame(columns=[
@@ -235,7 +235,7 @@ def get_upcoming_games():
     today = datetime.date.today()
     tomorrow = today + datetime.timedelta(days=1)
     upcoming_games = pd.DataFrame(get_schedule(today))
-    upcoming_games = upcoming_games.append(get_schedule(tomorrow), ignore_index=True)
+    upcoming_games = upcoming_games._append(get_schedule(tomorrow), ignore_index=True)
     return upcoming_games
 
 
