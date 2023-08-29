@@ -58,7 +58,7 @@ def get_scoreboard(date):
     return games_df
 
 
-# Used when getting season box scores. Date format: YYY-MM-DD
+# Date format: YYYY-MM-DD
 def get_gamePks_by_date(date):
     url = "https://baseballsavant.mlb.com/scoreboard-data?date={}".format(date)
     headers = {
@@ -118,7 +118,6 @@ def get_schedule(date):
 
 
 # Used for results of finished games
-# To do: make this use lists instead of appending a ton of dataframes
 def get_box_score(gamePk, position):
     url = "https://baseballsavant.mlb.com/gf?game_pk={}".format(gamePk)
     payload = {}
@@ -328,7 +327,7 @@ def get_season_data(season):
     return get_data_by_date(start_date, end_date)
  
 
-# Gets data used for predictive model
+# Gets data of games by date. Used for predictive model.
 def get_data_by_date(start_date, end_date):
     date_range = pd.date_range(start=start_date, end=end_date)
     date_range = [d.strftime('%#m/%#d/%Y') for d in date_range]
@@ -458,7 +457,7 @@ def get_box_scores_by_season(season, position):
     box_score_list = []
     for date in date_range:
         print('Started scraping: ' + date)
-        games = get_gamePk_per_date(date)
+        games = get_gamePks_by_date(date)
         print(games)
         for game in games if games is not None else []:
             box_score_list.extend(get_box_score(game, position))
