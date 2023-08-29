@@ -6,22 +6,36 @@ from data.mlb_dao import *
 from tabulate import tabulate
 
 
-def mlb_predict_games():
-    print("\nMLB Upcoming Games:")
-    season = datetime.date.today().year
-    upcoming_games = get_upcoming_games()
-    print(tabulate(upcoming_games, headers='keys'))
-    print(get_box_score('718452', 'pitching'))
+def predict_mlb_games():
+    #season = str(datetime.date.today().year)
+    season = '2022'
+
+    #print(tabulate(get_data_by_date('2023-07-14', '2023-07-15'), headers='keys'))
+    #print(get_box_score(661279, 'pitching'))
+    season_data = get_season_data(season)
+    export(season_data, '{}_season_data'.format(season))
+
+    return
+
+
+def download_mlb_season_data():
+    season = input('What season would you like to download? ')
+
+    season_data = get_season_data(season)
+    export(season_data, '{}_season_data'.format(season))
 
     return
 
 
 def mlb_upcoming_moneyline():
     url = 'https://www.bettingpros.com/mlb/odds/moneyline/'
-    upcoming_games_df = get_upcoming_odds(url, 'no')
+    upcoming_games_df = get_upcoming_games()
+    print("\nMLB Upcoming Games:")
+    print(tabulate(upcoming_games_df, headers='keys'))
 
+    upcoming_odds_df = get_upcoming_odds(url, 'no')
     print("\nMLB Upcoming Moneyline Odds:")
-    print(tabulate(upcoming_games_df[['Date', 'Game', 'Away', 'Home']], headers='keys'))
+    print(tabulate(upcoming_odds_df, headers='keys'))
 
     return
 
