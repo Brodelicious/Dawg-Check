@@ -7,13 +7,10 @@ from tabulate import tabulate
 
 
 def predict_mlb_games():
-    #season = str(datetime.date.today().year)
-    season = '2022'
-
-    #print(tabulate(get_data_by_date('2023-07-14', '2023-07-15'), headers='keys'))
-    #print(get_box_score(661279, 'pitching'))
-    season_data = get_season_data(season)
-    export(season_data, '{}_season_data'.format(season))
+    #train_df = pd.read_csv('data/CSVs/2022_season_data.csv')
+    #test_df = pd.read_csv('data/CSVs/2023_season_data.csv')
+    train_df = get_season_data('2022')
+    test_df = get_season_data('2023')
 
     return
 

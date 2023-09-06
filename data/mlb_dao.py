@@ -303,18 +303,6 @@ def get_box_score(gamePk, position):
 
 
 def get_season_data(season):
-    file_path = 'data/CSVs/{}_season_data.csv'.format(season)
-    # Check to see if data from this season has been scraped already
-    if os.path.isfile(file_path):
-        odds_df = pd.read_csv(file_path)
-        last_date = odds_df.iloc[-1]['Date']
-        start_date = datetime.datetime.strptime(last_date, '%Y-%m-%d') + datetime.timedelta(days=1)
-        print('\nFound CSV file. Last updated on: {}. Will check for spreads starting at {}'.format(last_date, start_date))
-    else:
-        odds_df = pd.DataFrame()
-        start_date = datetime.date(season, 3, 30)
-        print('\n[No existing file found at {}]'.format(file_path))
-
     today = datetime.date.today()
     dates = {
             '2023': {'start': '2023-03-30', 'end': str(today - datetime.timedelta(days=1))},
@@ -322,13 +310,26 @@ def get_season_data(season):
             '2021': {'start': '2021-04-01', 'end': '2021-08-03'},
             '2020': {'start': '2020-07-23', 'end': '2020-09-27'}
             }
-    start_date = dates[season]['start']
-    end_date = dates[season]['end']
-    return get_data_by_date(start_date, end_date)
+
+    # Check to see if data from this season has been scraped already
+    file_path = 'data/CSVs/{}_season_data.csv'.format(season)
+    if os.path.isfile(file_path):
+        original_df = pd.read_csv(file_path)
+        last_date = original_df.iloc[-1]['Date']
+        start_date = datetime.datetime.strptime(last_date, '%m/%d/%Y') + datetime.timedelta(days=1)
+        end_date = today - datetime.timedelta(days=1)
+        print('\nFound CSV file. Last updated on: {}. Will check for spreads starting at {}'.format(last_date, start_date))
+        return original_df._append(get_data_by_date_range(start_date, end_date))
+
+    else:
+        start_date = dates[season]['start']
+        end_date = dates[season]['end']
+        print('\n[No existing file found at {}]'.format(file_path))
+        return get_data_by_date_range(start_date, end_date)
  
 
-# Gets data of games by date. Used for predictive model.
-def get_data_by_date(start_date, end_date):
+# Gets data of games within a range of dates.
+def get_data_by_date_range(start_date, end_date):
     date_range = pd.date_range(start=start_date, end=end_date)
     date_range = [d.strftime('%#m/%#d/%Y') for d in date_range]
 
