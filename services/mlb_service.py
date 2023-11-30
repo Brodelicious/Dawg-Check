@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from datetime import date
 from helpers.web_scraper import *
@@ -5,21 +6,37 @@ from helpers.export import export
 from data.mlb_dao import *
 from tabulate import tabulate
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+
+def modify_mlb_data():
+    df = pd.DataFrame()
+    for index, row in df.iterrows():
+        # changes here
+        print(df.iloc[row])
+    return
+
 
 def predict_mlb_games():
-    #train_df = pd.read_csv('data/CSVs/2022_season_data.csv')
-    #test_df = pd.read_csv('data/CSVs/2023_season_data.csv')
-    train_df = get_season_data('2022')
-    test_df = get_season_data('2023')
+    df_2021 = pd.read_csv('data/CSVs/2021_team_data.csv')
+    df_2022 = pd.read_csv('data/CSVs/2022_team_data.csv')
+    df_2023 = pd.read_csv('data/CSVs/2023_team_data.csv')
+    df = pd.concat([df_2021, df_2022, df_2023], ignore_index=True)
 
+    x = df.drop('Offense Runs', axis=1)
+    y = df['Offense Runs']
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=100)
+
+    # to do: shift season stats to adjust for them including the stats at the end of the game
     return
 
 
 def download_mlb_season_data():
     season = input('What season would you like to download? ')
 
-    season_data = get_season_data(season)
-    export(season_data, '{}_season_data'.format(season))
+    data = get_stats_by_season(season)
+    export(data, '{}_season_data'.format(season))
 
     return
 

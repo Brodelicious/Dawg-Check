@@ -12,67 +12,9 @@ box score stats for the current game are included in season stat calculation whe
 box score stats for the current game are not included in season stat calculation when said game is not finished (I think)
 '''
 
-stat_cols = [
-    'Game ID',
-    'Date',
-    'Offense Name',
-    'Offense ID',
-    'Offense Games Played',
-    'Offense Home Advantage',
-    'Offense AVG',
-    'Offense OBP',
-    'Offense SLG',
-    'Offense OPS',
-    'Defence Name',
-    'Defence ID',
-    'Defence Games Played',
-    'Defence Pitcher Name',
-    'Defence Pitcher ID',
-    'Defence Pitcher Starts',
-    'Defence Pitcher ERA',
-    'Defence Pitcher WHIP',
-    'Offense Runs']
+stat_cols = []
 
-
-'''
-stat_cols_old = [
-    'gamePk',
-    'Date',
-    'Away Team Name',
-    'Away Team ID',
-    'Away Team Games Played',
-    'Away Pitcher Name',
-    'Away Pitcher ID',
-    'Away Pitcher Starts',
-    'Away Pitcher ERA',
-    'Away Pitcher WHIP',
-    'Away Team AVG',
-    'Away Team OBP',
-    'Away Team SLG',
-    'Away Team OPS',
-    'Away Team Runs',
-    'Home Team Name',
-    'Home Team ID',
-    'Home Team Games Played',
-    'Home Pitcher Name',
-    'Home Pitcher ID',
-    'Home Pitcher Starts',
-    'Home Pitcher ERA',
-    'Home Pitcher WHIP',
-    'Home Team AVG',
-    'Home Team OBP',
-    'Home Team SLG',
-    'Home Team OPS',
-    'Home Team Runs',
-    'Home Team Win']
-'''
-
-
-season_dates = {
-    '2023': {'start': '2023-03-30', 'end': '2023-08-01'},
-    '2022': {'start': '2022-04-07', 'end': '2022-08-02'},
-    '2021': {'start': '2021-04-01', 'end': '2021-08-03'},
-    '2020': {'start': '2020-07-23', 'end': '2020-09-27'}}
+season_dates = {}
 
 #==================== STAT SCRAPING ====================
 def get_gamePks_by_date(date):
@@ -103,6 +45,7 @@ def get_gamePks_by_date(date):
 
 
 def get_stats_by_season(season):
+    # Check to see if data from this season has been scraped already
     file_path = 'data/CSVs/{}_season_data.csv'.format(season)
     if os.path.isfile(file_path):
         original_df = pd.read_csv(file_path)
@@ -129,220 +72,15 @@ def get_stats_by_date_range(start_date, end_date):
         print('Games found: ' + ' '.join(gamePks))
         for gamePk in gamePks if gamePks is not None else []:
             game_stats = get_stats_by_game(gamePk)
-            print(*game_stats, sep='\n')
-            stats_list.extend(game_stats)
+            print(game_stats)
+            stats_list.append(game_stats)
 
     games_df = pd.DataFrame(stats_list, columns=stat_cols)
     return games_df
     
 
 def get_stats_by_game(gamePk):
-    url = "https://baseballsavant.mlb.com/gf?game_pk={}".format(gamePk)
-    payload = {}
-    headers = {
-        'authority': 'baseballsavant.mlb.com',
-        'accept': '*/*',
-        'accept-language': 'en-US,en;q=0.9',
-        'cache-control': 'no-cache',
-        'referer': 'https://baseballsavant.mlb.com/gamefeed?date=4/23/2023&gamePk=718452&chartType=pitch&legendType=pitchName&playerType=pitcher&inning=&count=&pitchHand=&batSide=&descFilter=&ptFilter=&resultFilter=&hf=boxScore&sportId=1',
-        'sec-ch-ua': '"Not?A_Brand";v="99", "Opera GX";v="97", "Chromium";v="111"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 OPR/97.0.0.0'
-        }
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json()
-
-    date = data['gameDate']
-    # Away team stats
-    away_team_name = data['boxscore']['teams']['away']['team']['name']
-    away_team_id = data['boxscore']['teams']['away']['team']['id']
-    away_games_played = data['away_team_data']['record']['gamesPlayed']
-    away_sp_id = data['away_pitcher_lineup'][0]
-    if data['boxscore']['teams']['away']['players']['ID'+str(away_sp_id)]['stats']['pitching']['gamesPlayed'] == 0:
-        away_sp_id = data['away_pitcher_lineup'][1]
-    for player in data['boxscore']['teams']['away']['players']:
-        if away_sp_id == data['boxscore']['teams']['away']['players'][player]['person']['id']:
-            away_pitcher_name = data['boxscore']['teams']['away']['players'][player]['person']['fullName']
-            away_pitcher_id = data['boxscore']['teams']['away']['players'][player]['person']['id']
-            away_pitcher_starts = data['boxscore']['teams']['away']['players'][player]['stats']['pitching']['gamesPlayed']
-            away_pitcher_era = float(data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['era'])
-            away_pitcher_whip = float(data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['whip'])
-            break
-    away_team_avg = float(data['boxscore']['teams']['away']['teamStats']['batting']['avg'])
-    away_team_obp = float(data['boxscore']['teams']['away']['teamStats']['batting']['obp'])
-    away_team_slg = float(data['boxscore']['teams']['away']['teamStats']['batting']['slg'])
-    away_team_ops = float(data['boxscore']['teams']['away']['teamStats']['batting']['ops'])
-    away_team_r = data['boxscore']['teams']['away']['teamStats']['batting']['runs']
-    # Home team stats
-    home_team_name = data['boxscore']['teams']['home']['team']['name']
-    home_team_id = data['boxscore']['teams']['home']['team']['id']
-    home_games_played = data['home_team_data']['record']['gamesPlayed']
-    home_sp_id = data['home_pitcher_lineup'][0]
-    if data['boxscore']['teams']['home']['players']['ID'+str(home_sp_id)]['stats']['pitching']['gamesPlayed'] == 0:
-        home_sp_id = data['home_pitcher_lineup'][1]
-    for player in data['boxscore']['teams']['home']['players']:
-        if home_sp_id == data['boxscore']['teams']['home']['players'][player]['person']['id']:
-            home_pitcher_name = data['boxscore']['teams']['home']['players'][player]['person']['fullName']
-            home_pitcher_id = data['boxscore']['teams']['home']['players'][player]['person']['id']
-            home_pitcher_starts = data['boxscore']['teams']['home']['players'][player]['stats']['pitching']['gamesPlayed']
-            home_pitcher_era = float(data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['era'])
-            home_pitcher_whip = float(data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['whip'])
-            break
-    home_team_avg = float(data['boxscore']['teams']['home']['teamStats']['batting']['avg'])
-    home_team_obp = float(data['boxscore']['teams']['home']['teamStats']['batting']['obp'])
-    home_team_slg = float(data['boxscore']['teams']['home']['teamStats']['batting']['slg'])
-    home_team_ops = float(data['boxscore']['teams']['home']['teamStats']['batting']['ops'])
-    home_team_r = data['boxscore']['teams']['home']['teamStats']['batting']['runs']
-
-    stats = [
-            [
-            gamePk,
-            date,
-            away_team_name,
-            away_team_id,
-            away_games_played,
-            False,
-            away_team_avg,
-            away_team_obp,
-            away_team_slg,
-            away_team_ops,
-            home_team_name,
-            home_team_id,
-            home_games_played,
-            home_pitcher_name,
-            home_pitcher_id,
-            home_pitcher_starts,
-            home_pitcher_era,
-            home_pitcher_whip,
-            away_team_r
-            ],
-            [
-            gamePk,
-            date,
-            home_team_name,
-            home_team_id,
-            home_games_played,
-            True,
-            home_team_avg,
-            home_team_obp,
-            home_team_slg,
-            home_team_ops,
-            away_team_name,
-            away_team_id,
-            away_games_played,
-            away_pitcher_name,
-            away_pitcher_id,
-            away_pitcher_starts,
-            away_pitcher_era,
-            away_pitcher_whip,
-            home_team_r
-            ]
-            ]
-
-    return stats
-
-
-'''
-def get_stats_by_game_old(gamePk):
-    url = "https://baseballsavant.mlb.com/gf?game_pk={}".format(gamePk)
-    payload = {}
-    headers = {
-        'authority': 'baseballsavant.mlb.com',
-        'accept': '*/*',
-        'accept-language': 'en-US,en;q=0.9',
-        'cache-control': 'no-cache',
-        'referer': 'https://baseballsavant.mlb.com/gamefeed?date=4/23/2023&gamePk=718452&chartType=pitch&legendType=pitchName&playerType=pitcher&inning=&count=&pitchHand=&batSide=&descFilter=&ptFilter=&resultFilter=&hf=boxScore&sportId=1',
-        'sec-ch-ua': '"Not?A_Brand";v="99", "Opera GX";v="97", "Chromium";v="111"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 OPR/97.0.0.0'
-        }
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json()
-
-    date = data['gameDate']
-    # Away team stats
-    away_team_name = data['boxscore']['teams']['away']['team']['name']
-    away_team_id = data['boxscore']['teams']['away']['team']['id']
-    away_games_played = data['away_team_data']['record']['gamesPlayed']
-    away_sp_id = data['away_pitcher_lineup'][0]
-    if data['boxscore']['teams']['away']['players']['ID'+str(away_sp_id)]['stats']['pitching']['gamesPlayed'] == 0:
-        away_sp_id = data['away_pitcher_lineup'][1]
-    for player in data['boxscore']['teams']['away']['players']:
-        if away_sp_id == data['boxscore']['teams']['away']['players'][player]['person']['id']:
-            away_pitcher_name = data['boxscore']['teams']['away']['players'][player]['person']['fullName']
-            away_pitcher_id = data['boxscore']['teams']['away']['players'][player]['person']['id']
-            away_pitcher_starts = data['boxscore']['teams']['away']['players'][player]['stats']['pitching']['gamesPlayed']
-            away_pitcher_era = float(data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['era'])
-            away_pitcher_whip = float(data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['whip'])
-            break
-    away_team_avg = float(data['boxscore']['teams']['away']['teamStats']['batting']['avg'])
-    away_team_obp = float(data['boxscore']['teams']['away']['teamStats']['batting']['obp'])
-    away_team_slg = float(data['boxscore']['teams']['away']['teamStats']['batting']['slg'])
-    away_team_ops = float(data['boxscore']['teams']['away']['teamStats']['batting']['ops'])
-    away_team_r = data['boxscore']['teams']['away']['teamStats']['batting']['runs']
-    # Home team stats
-    home_team_name = data['boxscore']['teams']['home']['team']['name']
-    home_team_id = data['boxscore']['teams']['home']['team']['id']
-    home_games_played = data['home_team_data']['record']['gamesPlayed']
-    home_sp_id = data['home_pitcher_lineup'][0]
-    if data['boxscore']['teams']['home']['players']['ID'+str(home_sp_id)]['stats']['pitching']['gamesPlayed'] == 0:
-        home_sp_id = data['home_pitcher_lineup'][1]
-    for player in data['boxscore']['teams']['home']['players']:
-        if home_sp_id == data['boxscore']['teams']['home']['players'][player]['person']['id']:
-            home_pitcher_name = data['boxscore']['teams']['home']['players'][player]['person']['fullName']
-            home_pitcher_id = data['boxscore']['teams']['home']['players'][player]['person']['id']
-            home_pitcher_starts = data['boxscore']['teams']['home']['players'][player]['stats']['pitching']['gamesPlayed']
-            home_pitcher_era = float(data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['era'])
-            home_pitcher_whip = float(data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['whip'])
-            break
-    home_team_avg = float(data['boxscore']['teams']['home']['teamStats']['batting']['avg'])
-    home_team_obp = float(data['boxscore']['teams']['home']['teamStats']['batting']['obp'])
-    home_team_slg = float(data['boxscore']['teams']['home']['teamStats']['batting']['slg'])
-    home_team_ops = float(data['boxscore']['teams']['home']['teamStats']['batting']['ops'])
-    home_team_r = data['boxscore']['teams']['home']['teamStats']['batting']['runs']
-
-    stats = [
-            gamePk,
-            date,
-            away_team_name,
-            away_team_id,
-            away_games_played,
-            away_pitcher_name,
-            away_pitcher_id,
-            away_pitcher_starts,
-            away_pitcher_era,
-            away_pitcher_whip,
-            away_team_avg,
-            away_team_obp,
-            away_team_slg,
-            away_team_ops,
-            away_team_r,
-            home_team_name,
-            home_team_id,
-            home_games_played,
-            home_pitcher_name,
-            home_pitcher_id,
-            home_pitcher_starts,
-            home_pitcher_era,
-            home_pitcher_whip,
-            home_team_avg,
-            home_team_obp,
-            home_team_slg,
-            home_team_ops,
-            home_team_r,
-            int(home_team_r) > int(away_team_r)]
-
-    return stats
-'''
-
+    return
 
 # (Currently unused)
 def get_box_score(gamePk, position):

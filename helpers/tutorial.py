@@ -24,7 +24,7 @@ def nba_predict_tutorial():
 
     # Get the results for the season
     season = input("\nWhich season?\n")
-    results = get_season_results(season, False)
+    results = get_season_results(season)
 
     # This is our scoring mechanism. f1_score uses both wins and loses
     scorer = make_scorer(f1_score, pos_label=None, average='weighted')

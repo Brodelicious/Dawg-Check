@@ -54,14 +54,14 @@ def main():
     running = False
     command = input("\nHow may I help you?\n")
 
-# MLB Commands
-    if command == "mlb predict games" and running == False:
+    # MLB Commands
+    if command == "predict mlb games" and running == False:
         running = True
         predict_mlb_games()
-    if command == "download mlb season data" and running == False:
+    if command == "download mlb season stats" and running == False:
         running = True
         download_mlb_season_data()
-    if command == "mlb upcoming moneyline" and running == False:
+    if command == "upcoming mlb moneyline" and running == False:
         running = True
         mlb_upcoming_moneyline()
     if command == "mlb season moneyline" and running == False:
@@ -73,8 +73,11 @@ def main():
     if command == "mlb season f5" and running == False:
         running = True
         mlb_season_f5()
+    if command == "modify mlb data" and running == False:
+        running = True
+        modify_mlb_data()
 
-# NBA Commands
+    # NBA Commands
     if command == "predict nba spreads" and running == False:
         running = True
         nba_spread_predict()
