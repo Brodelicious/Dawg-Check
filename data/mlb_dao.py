@@ -23,14 +23,14 @@ stat_cols = [
     'Offense OBP',
     'Offense SLG',
     'Offense OPS',
-    'Defence Name',
-    'Defence ID',
-    'Defence Games Played',
-    'Defence Pitcher Name',
-    'Defence Pitcher ID',
-    'Defence Pitcher Starts',
-    'Defence Pitcher ERA',
-    'Defence Pitcher WHIP',
+    'Defense Name',
+    'Defense ID',
+    'Defense Games Played',
+    'Defense Pitcher Name',
+    'Defense Pitcher ID',
+    'Defense Pitcher Starts',
+    'Defense Pitcher ERA',
+    'Defense Pitcher WHIP',
     'Offense Runs']
 
 
