@@ -18,20 +18,23 @@ stat_cols = [
     'Offense Name',
     'Offense ID',
     'Offense Games Played',
-    'Offense Home Advantage',
+    'Offense Home',
     'Offense AVG',
     'Offense OBP',
     'Offense SLG',
     'Offense OPS',
+    'Offense Runs',
     'Defense Name',
     'Defense ID',
     'Defense Games Played',
-    'Defense Pitcher Name',
-    'Defense Pitcher ID',
-    'Defense Pitcher Starts',
-    'Defense Pitcher ERA',
-    'Defense Pitcher WHIP',
-    'Offense Runs']
+    'Pitcher Name',
+    'Pitcher ID',
+    'Pitcher Starts',
+    'Pitcher ERA',
+    'Pitcher WHIP',
+    'Pitcher Innings',
+    'Pitcher Strikeouts',
+    'Pitcher Runs']
 
 
 '''
@@ -162,15 +165,18 @@ def get_stats_by_game(gamePk):
     away_team_id = data['boxscore']['teams']['away']['team']['id']
     away_games_played = data['away_team_data']['record']['gamesPlayed']
     away_sp_id = data['away_pitcher_lineup'][0]
-    if data['boxscore']['teams']['away']['players']['ID'+str(away_sp_id)]['stats']['pitching']['gamesPlayed'] == 0:
+    if data['boxscore']['teams']['away']['players']['ID'+str(away_sp_id)]['stats']['pitching']['gamesStarted'] == 0:
         away_sp_id = data['away_pitcher_lineup'][1]
     for player in data['boxscore']['teams']['away']['players']:
         if away_sp_id == data['boxscore']['teams']['away']['players'][player]['person']['id']:
             away_pitcher_name = data['boxscore']['teams']['away']['players'][player]['person']['fullName']
             away_pitcher_id = data['boxscore']['teams']['away']['players'][player]['person']['id']
-            away_pitcher_starts = data['boxscore']['teams']['away']['players'][player]['stats']['pitching']['gamesPlayed']
+            away_pitcher_starts = data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['gamesStarted']
             away_pitcher_era = float(data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['era'])
             away_pitcher_whip = float(data['boxscore']['teams']['away']['players'][player]['seasonStats']['pitching']['whip'])
+            away_pitcher_ip = float(data['boxscore']['teams']['away']['players'][player]['stats']['pitching']['inningsPitched'])
+            away_pitcher_k = data['boxscore']['teams']['away']['players'][player]['stats']['pitching']['strikeOuts']
+            away_pitcher_r = data['boxscore']['teams']['away']['players'][player]['stats']['pitching']['runs']
             break
     away_team_avg = float(data['boxscore']['teams']['away']['teamStats']['batting']['avg'])
     away_team_obp = float(data['boxscore']['teams']['away']['teamStats']['batting']['obp'])
@@ -182,15 +188,18 @@ def get_stats_by_game(gamePk):
     home_team_id = data['boxscore']['teams']['home']['team']['id']
     home_games_played = data['home_team_data']['record']['gamesPlayed']
     home_sp_id = data['home_pitcher_lineup'][0]
-    if data['boxscore']['teams']['home']['players']['ID'+str(home_sp_id)]['stats']['pitching']['gamesPlayed'] == 0:
+    if data['boxscore']['teams']['home']['players']['ID'+str(home_sp_id)]['stats']['pitching']['gamesStarted'] == 0:
         home_sp_id = data['home_pitcher_lineup'][1]
     for player in data['boxscore']['teams']['home']['players']:
         if home_sp_id == data['boxscore']['teams']['home']['players'][player]['person']['id']:
             home_pitcher_name = data['boxscore']['teams']['home']['players'][player]['person']['fullName']
             home_pitcher_id = data['boxscore']['teams']['home']['players'][player]['person']['id']
-            home_pitcher_starts = data['boxscore']['teams']['home']['players'][player]['stats']['pitching']['gamesPlayed']
+            home_pitcher_starts = data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['gamesStarted']
             home_pitcher_era = float(data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['era'])
             home_pitcher_whip = float(data['boxscore']['teams']['home']['players'][player]['seasonStats']['pitching']['whip'])
+            home_pitcher_ip = float(data['boxscore']['teams']['home']['players'][player]['stats']['pitching']['inningsPitched'])
+            home_pitcher_k = data['boxscore']['teams']['home']['players'][player]['stats']['pitching']['strikeOuts']
+            home_pitcher_r = data['boxscore']['teams']['home']['players'][player]['stats']['pitching']['runs']
             break
     home_team_avg = float(data['boxscore']['teams']['home']['teamStats']['batting']['avg'])
     home_team_obp = float(data['boxscore']['teams']['home']['teamStats']['batting']['obp'])
@@ -210,6 +219,7 @@ def get_stats_by_game(gamePk):
             away_team_obp,
             away_team_slg,
             away_team_ops,
+            away_team_r,
             home_team_name,
             home_team_id,
             home_games_played,
@@ -218,7 +228,9 @@ def get_stats_by_game(gamePk):
             home_pitcher_starts,
             home_pitcher_era,
             home_pitcher_whip,
-            away_team_r
+            home_pitcher_ip,
+            home_pitcher_k,
+            home_pitcher_r
             ],
             [
             gamePk,
@@ -231,6 +243,7 @@ def get_stats_by_game(gamePk):
             home_team_obp,
             home_team_slg,
             home_team_ops,
+            home_team_r,
             away_team_name,
             away_team_id,
             away_games_played,
@@ -239,7 +252,9 @@ def get_stats_by_game(gamePk):
             away_pitcher_starts,
             away_pitcher_era,
             away_pitcher_whip,
-            home_team_r
+            away_pitcher_ip,
+            away_pitcher_k,
+            away_pitcher_r
             ]
             ]
 

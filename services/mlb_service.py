@@ -5,11 +5,16 @@ from helpers.web_scraper import *
 from helpers.export import export
 from data.mlb_dao import *
 from tabulate import tabulate
+import sys
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
 
+np.set_printoptions(threshold=sys.maxsize)
 
 def modify_mlb_data():
     df = pd.DataFrame()
@@ -20,23 +25,75 @@ def modify_mlb_data():
 
 
 def predict_mlb_games():
+    predicted_column = 'Pitcher Runs'
+    print('\nPredicting MLB Games...\n')
     df_2021 = pd.read_csv('data/CSVs/2021_season_data.csv')
     df_2022 = pd.read_csv('data/CSVs/2022_season_data.csv')
     df_2023 = pd.read_csv('data/CSVs/2023_season_data.csv')
     df = pd.concat([df_2021, df_2022, df_2023], ignore_index=True)
 
-    x = df.drop(['Offense Runs', 'Date', 'Offense ID', 'Defense ID', 'Defense Pitcher ID', 'Offense Name', 'Defense Name'], axis=1)
-    y = df['Offense Runs']
+    # to do: shift season stats to adjust for them including the stats at the end of the game
+    #x = df.drop(['Offense Runs', 'Date', 'Offense ID', 'Defense ID', 'Defense Pitcher ID', 'Offense Name', 'Defense Name', 'Defense Pitcher Name'], axis=1)
+    df = df.drop(df[df['Pitcher Starts'] < 5].index)
+    x = df[['Offense AVG', 'Offense OBP', 'Offense SLG', 'Pitcher ERA', 'Pitcher WHIP']]
+    y = df[predicted_column]
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=100)
 
+    # Linear Regression Model
     lr = LinearRegression()
     lr.fit(x_train, y_train)
 
     y_lr_train_pred = lr.predict(x_train)
     y_lr_test_pred = lr.predict(x_test)
-    print(y_lr_train_pred, y_lr_test_pred)
 
-    # to do: shift season stats to adjust for them including the stats at the end of the game
+    lr_train_mse = mean_squared_error(y_train, y_lr_train_pred)
+    lr_train_r2 = r2_score(y_train, y_lr_train_pred)
+    lr_test_mse = mean_squared_error(y_test, y_lr_test_pred)
+    lr_test_r2 = r2_score(y_test, y_lr_test_pred)
+
+    lr_results = pd.DataFrame(['Linear Regression', lr_train_mse, lr_train_r2, lr_test_mse, lr_test_r2]).transpose()
+    lr_results.columns = ['Method', 'Training MSE', 'Training R2', 'Test MSE', 'Test R2']
+
+    # Random Forest Model
+    rf = RandomForestRegressor(max_depth=2, random_state=100)
+    rf.fit(x_train, y_train)
+
+    y_rf_train_pred = rf.predict(x_train)
+    y_rf_test_pred = rf.predict(x_test)
+
+    rf_train_mse = mean_squared_error(y_train, y_rf_train_pred)
+    rf_train_r2 = r2_score(y_train, y_rf_train_pred)
+    rf_test_mse = mean_squared_error(y_test, y_rf_test_pred)
+    rf_test_r2 = r2_score(y_test, y_rf_test_pred)
+
+    rf_results = pd.DataFrame(['Random Forest', rf_train_mse, rf_train_r2, rf_test_mse, rf_test_r2]).transpose()
+    rf_results.columns = ['Method', 'Training MSE', 'Training R2', 'Test MSE', 'Test R2']
+
+    # Model results
+    df_models = pd.concat([lr_results, rf_results], axis=0)
+    print(tabulate(df_models, headers='keys', showindex=False))
+
+    # Data visualization
+    plt.figure(figsize=(5,5))
+    plt.scatter(x=y_train, y=y_lr_train_pred, alpha=0.3)
+    #z = np.polyfit(y_train, y_lr_train_pred, 1)
+    #p = np.poly1d(z)
+    #plt.plot(y_train, p(y_train))
+    plt.xlabel('Actual Runs')
+    plt.ylabel('Predicted Runs')
+    #plt.show()
+
+    # Predicting today's games
+    #upcoming_games = get_upcoming_games()
+    upcoming_games = get_stats_by_date_range('2023-08-01', '2023-08-01')
+    predicted_games = upcoming_games[['Offense AVG', 'Offense OBP', 'Offense SLG', 'Pitcher ERA', 'Pitcher WHIP']]
+    upcoming_games['Predicted Runs'] = lr.predict(predicted_games)
+    print('\nPrediction of Upcoming Games:')
+    print(tabulate(upcoming_games[['Offense Name', 'Offense AVG', 'Offense OBP', 'Offense SLG', 
+                                   'Defense Name', 'Pitcher Name', 'Pitcher ERA', 'Pitcher WHIP', 
+                                   predicted_column, 'Predicted Runs', 'Pitcher Innings']], 
+                   headers='keys', showindex=False))
+
     return
 
 
